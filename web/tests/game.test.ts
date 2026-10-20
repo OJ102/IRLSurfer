@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { GameState, ObstacleType } from '../src/game';
+import { GameState, ObstacleType, RunnerGame } from '../src/game';
 
 describe('GameState Logic & Physics Unit Tests', () => {
   let state: GameState;
@@ -183,5 +183,131 @@ describe('GameState Logic & Physics Unit Tests', () => {
     expect(outcome.coinCollected).toBe(true);
     expect(state.coins).toBe(1);
     expect(state.score).toBeGreaterThan(initialScore + 40);
+  });
+
+  describe('Speed Multiplier Controller Tests', () => {
+    it('initializes with default speedMultiplier = 1.0 and clamps range to [0.5, 2.5]', () => {
+      expect(state.speedMultiplier).toBe(1.0);
+
+      state.setSpeedMultiplier(1.5);
+      expect(state.speedMultiplier).toBe(1.5);
+
+      state.setSpeedMultiplier(0.2);
+      expect(state.speedMultiplier).toBe(0.5);
+
+      state.setSpeedMultiplier(3.5);
+      expect(state.speedMultiplier).toBe(2.5);
+    });
+
+    it('scales obstacle and coin forward track scroll speed by speedMultiplier', () => {
+      const state1 = new GameState();
+      state1.setSpeedMultiplier(1.0);
+      state1.obstacles = [
+        { id: 1, lane: 0, type: ObstacleType.LOW_HURDLE, z: 0.1, cleared: false },
+      ];
+      state1.coinsList = [
+        { id: 2, lane: 0, z: 0.1, collected: false },
+      ];
+
+      const state2 = new GameState();
+      state2.setSpeedMultiplier(2.0);
+      state2.obstacles = [
+        { id: 1, lane: 0, type: ObstacleType.LOW_HURDLE, z: 0.1, cleared: false },
+      ];
+      state2.coinsList = [
+        { id: 2, lane: 0, z: 0.1, collected: false },
+      ];
+
+      const dt = 0.05;
+      state1.update(dt);
+      state2.update(dt);
+
+      const deltaZ1 = state1.obstacles[0].z - 0.1;
+      const deltaZ2 = state2.obstacles[0].z - 0.1;
+      expect(deltaZ2).toBeCloseTo(deltaZ1 * 2.0, 3);
+
+      const coinDeltaZ1 = state1.coinsList[0].z - 0.1;
+      const coinDeltaZ2 = state2.coinsList[0].z - 0.1;
+      expect(coinDeltaZ2).toBeCloseTo(coinDeltaZ1 * 2.0, 3);
+    });
+
+    it('scales obstacle spawn progression by speedMultiplier', () => {
+      const state1 = new GameState();
+      state1.setSpeedMultiplier(1.0);
+      const state2 = new GameState();
+      state2.setSpeedMultiplier(2.0);
+
+      const dt = 0.05;
+      state1.update(dt);
+      state2.update(dt);
+
+      // Score and spawnTimer progress twice as fast at 2.0x
+      expect(state2.score).toBeGreaterThan(state1.score * 1.5);
+    });
+
+    it('scales particle movement speed by speedMultiplier', () => {
+      const state1 = new GameState();
+      state1.setSpeedMultiplier(1.0);
+      state1.particles = [
+        { x: 0, y: 0, vx: 100, vy: 50, color: '#fff', size: 3, life: 0, maxLife: 1.0 },
+      ];
+
+      const state2 = new GameState();
+      state2.setSpeedMultiplier(2.0);
+      state2.particles = [
+        { x: 0, y: 0, vx: 100, vy: 50, color: '#fff', size: 3, life: 0, maxLife: 1.0 },
+      ];
+
+      const dt = 0.05;
+      state1.update(dt);
+      state2.update(dt);
+
+      expect(state2.particles[0].x).toBeCloseTo(state1.particles[0].x * 2.0, 3);
+      expect(state2.particles[0].y).toBeCloseTo(state1.particles[0].y * 2.0, 3);
+    });
+
+    it('RunnerGame coordinates speedMultiplier with GameState', () => {
+      const mockCtx = {
+        fillRect: () => {},
+        clearRect: () => {},
+        strokeRect: () => {},
+        beginPath: () => {},
+        closePath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        stroke: () => {},
+        fill: () => {},
+        arc: () => {},
+        ellipse: () => {},
+        fillText: () => {},
+        measureText: () => ({ width: 50 }),
+        save: () => {},
+        restore: () => {},
+        createLinearGradient: () => ({ addColorStop: () => {} }),
+      } as unknown as CanvasRenderingContext2D;
+
+      const mockCanvas = {
+        width: 800,
+        height: 600,
+        getContext: () => mockCtx,
+      } as unknown as HTMLCanvasElement;
+
+      const game = new RunnerGame(mockCanvas);
+      expect(game.speedMultiplier).toBe(1.0);
+      expect(game.state.speedMultiplier).toBe(1.0);
+
+      game.setSpeedMultiplier(1.75);
+      expect(game.speedMultiplier).toBe(1.75);
+      expect(game.state.speedMultiplier).toBe(1.75);
+
+      // Clamping
+      game.setSpeedMultiplier(0.1);
+      expect(game.speedMultiplier).toBe(0.5);
+      expect(game.state.speedMultiplier).toBe(0.5);
+
+      game.setSpeedMultiplier(5.0);
+      expect(game.speedMultiplier).toBe(2.5);
+      expect(game.state.speedMultiplier).toBe(2.5);
+    });
   });
 });

@@ -10,7 +10,12 @@ from typing import Any
 import cv2
 import numpy as np
 
-from irlsurfer.detector import DetectorState, GestureDetector, GestureEvent
+from irlsurfer.detector import (
+    DetectorState,
+    DistanceStatus,
+    GestureDetector,
+    GestureEvent,
+)
 from irlsurfer.landmarks import Frame
 
 
@@ -67,10 +72,18 @@ class DebugHUD:
         # 3. Status bar at top
         self._render_status_bar(out, frame_data, detector, fps, latency_ms, paused, w)
 
-        # 4. Recent gesture banner with fadeout
+        # 4. Calibration distance pause overlay notice
+        if (
+            not paused
+            and detector.state == DetectorState.CALIBRATING
+            and detector.last_distance_status in (DistanceStatus.TOO_CLOSE, DistanceStatus.TOO_FAR)
+        ):
+            self._render_calibration_distance_notice(out, detector, w, h)
+
+        # 5. Recent gesture banner with fadeout
         self._render_gesture_banner(out, frame_data, w, h)
 
-        # 5. Semi-transparent darkened overlay when paused
+        # 6. Semi-transparent darkened overlay when paused
         if paused:
             self._render_pause_overlay(out, w, h)
 
@@ -200,9 +213,10 @@ class DebugHUD:
         paused: bool,
         w: int,
     ) -> None:
+        header_h = 42
         # Dark header banner background
         overlay = img.copy()
-        cv2.rectangle(overlay, (0, 0), (w, 36), (20, 20, 20), -1)
+        cv2.rectangle(overlay, (0, 0), (w, header_h), (20, 20, 20), -1)
         cv2.addWeighted(overlay, 0.75, img, 0.25, 0, img)
 
         # Status badge
@@ -210,24 +224,27 @@ class DebugHUD:
             badge_text = "[PAUSED]"
             badge_color = (0, 0, 255)  # Red
         elif detector.state == DetectorState.CALIBRATING:
-            if detector._calib_start_time is not None and frame_data is not None:
-                elapsed = frame_data.timestamp - detector._calib_start_time
-                remain = max(0.0, detector.config.calibration_seconds - elapsed)
-                badge_text = f"[CALIBRATING: {remain:.1f}s]"
+            remain = max(
+                0.0,
+                detector.config.calibration_seconds * (1.0 - detector.calibration_progress),
+            )
+            if detector.last_distance_status in (DistanceStatus.TOO_CLOSE, DistanceStatus.TOO_FAR):
+                badge_text = f"[CALIB PAUSED: {remain:.1f}s]"
             else:
-                badge_text = f"[CALIBRATING: {detector.config.calibration_seconds:.1f}s]"
+                badge_text = f"[CALIBRATING: {remain:.1f}s]"
             badge_color = (0, 165, 255)  # Orange
         else:
             lane_name = {-1: "LEFT", 0: "CENTER", 1: "RIGHT"}.get(detector.current_lane, "CENTER")
             badge_text = f"[ACTIVE | Lane: {lane_name}]"
             badge_color = (0, 255, 0)  # Neon Green
 
+        badge_scale = 0.55 if w >= 500 else 0.42
         cv2.putText(
             img,
             badge_text,
-            (12, 24),
+            (10, 26),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.65,
+            badge_scale,
             badge_color,
             2,
             cv2.LINE_AA,
@@ -235,13 +252,165 @@ class DebugHUD:
 
         # Performance metrics (FPS and latency)
         perf_text = f"FPS: {fps:.1f} | {latency_ms:.1f} ms"
-        (text_w, _), _ = cv2.getTextSize(perf_text, cv2.FONT_HERSHEY_SIMPLEX, 0.55, 1)
+        perf_scale = 0.50 if w >= 500 else 0.38
+        (text_w, _), _ = cv2.getTextSize(perf_text, cv2.FONT_HERSHEY_SIMPLEX, perf_scale, 1)
         cv2.putText(
             img,
             perf_text,
-            (max(10, w - text_w - 12), 24),
+            (max(10, w - text_w - 10), 26),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.55,
+            perf_scale,
+            (255, 255, 255),
+            1,
+            cv2.LINE_AA,
+        )
+
+        # Speed Multiplier badge: [1.0x SPEED]
+        speed_text = f"[{detector.speed_multiplier:.1f}x SPEED]"
+        speed_scale = 0.50 if w >= 500 else 0.38
+        speed_color = (0, 230, 255)  # Synthwave Gold / Yellow in BGR
+        (speed_w, _), _ = cv2.getTextSize(speed_text, cv2.FONT_HERSHEY_SIMPLEX, speed_scale, 2)
+        speed_x = max(10, w - text_w - speed_w - 20)
+        cv2.putText(
+            img,
+            speed_text,
+            (speed_x, 26),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            speed_scale,
+            speed_color,
+            2,
+            cv2.LINE_AA,
+        )
+
+        # Distance status pill badge & shoulder-width meter
+        self._render_distance_status_badge(img, frame_data, detector, w)
+
+    def _render_distance_status_badge(
+        self,
+        img: np.ndarray[Any, Any],
+        frame_data: Frame | None,
+        detector: GestureDetector,
+        w: int,
+    ) -> None:
+        dist_status = detector.last_distance_status
+        if dist_status == DistanceStatus.OPTIMAL:
+            badge_text = "DISTANCE OK"
+            color = (0, 255, 0)  # Green
+        elif dist_status == DistanceStatus.TOO_CLOSE:
+            badge_text = "STEP BACK - TOO CLOSE"
+            color = (0, 0, 255)  # Red alert
+        elif dist_status == DistanceStatus.TOO_FAR:
+            badge_text = "STEP CLOSER - TOO FAR"
+            color = (0, 140, 255)  # Amber alert
+        else:
+            badge_text = "NO PERSON DETECTED"
+            color = (150, 150, 150)  # Muted
+
+        pill_scale = 0.42 if w >= 500 else 0.32
+        (tw, th), _ = cv2.getTextSize(badge_text, cv2.FONT_HERSHEY_SIMPLEX, pill_scale, 1)
+        pill_cx = w // 2
+        pill_pad_x = 6
+        pill_pad_y = 2
+        p_x1 = max(5, pill_cx - tw // 2 - pill_pad_x)
+        p_x2 = min(w - 5, pill_cx + tw // 2 + pill_pad_x)
+        p_y1 = 3
+        p_y2 = p_y1 + th + pill_pad_y * 2
+
+        cv2.rectangle(img, (p_x1, p_y1), (p_x2, p_y2), (35, 35, 35), -1)
+        cv2.rectangle(img, (p_x1, p_y1), (p_x2, p_y2), color, 1)
+        text_x = max(p_x1 + pill_pad_x, pill_cx - tw // 2)
+        text_y = p_y1 + pill_pad_y + th
+        cv2.putText(
+            img,
+            badge_text,
+            (text_x, text_y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            pill_scale,
+            color,
+            1,
+            cv2.LINE_AA,
+        )
+
+        # Small horizontal shoulder-width meter relative to [0.14, 0.45]
+        meter_w = min(120, max(50, w // 4))
+        meter_h = 4
+        m_x1 = (w - meter_w) // 2
+        m_x2 = m_x1 + meter_w
+        m_y1 = 28
+        m_y2 = m_y1 + meter_h
+
+        # Meter background track
+        cv2.rectangle(img, (m_x1, m_y1), (m_x2, m_y2), (50, 50, 50), -1)
+
+        # Optimal bracket [0.14, 0.45] inside display range [0.0, 0.60]
+        range_max = 0.60
+        min_sw = detector.config.min_shoulder_width
+        max_sw = detector.config.max_shoulder_width
+        opt_x1 = m_x1 + int(np.clip(min_sw / range_max, 0.0, 1.0) * meter_w)
+        opt_x2 = m_x1 + int(np.clip(max_sw / range_max, 0.0, 1.0) * meter_w)
+        cv2.rectangle(img, (opt_x1, m_y1), (opt_x2, m_y2), (0, 130, 0), -1)
+        cv2.rectangle(img, (opt_x1, m_y1), (opt_x2, m_y2), (0, 220, 0), 1)
+
+        # Current shoulder-width indicator tick
+        if frame_data is not None and frame_data.is_valid(detector.config.min_visibility):
+            cur_sw = frame_data.shoulder_width
+            cur_pos = np.clip(cur_sw / range_max, 0.0, 1.0)
+            cur_x = m_x1 + int(cur_pos * meter_w)
+            tick_color = (
+                (0, 255, 0)
+                if (min_sw <= cur_sw <= max_sw)
+                else ((0, 0, 255) if cur_sw > max_sw else (0, 140, 255))
+            )
+            cv2.line(img, (cur_x, m_y1 - 2), (cur_x, m_y2 + 2), tick_color, 2)
+
+    def _render_calibration_distance_notice(
+        self,
+        img: np.ndarray[Any, Any],
+        detector: GestureDetector,
+        w: int,
+        h: int,
+    ) -> None:
+        if detector.last_distance_status == DistanceStatus.TOO_CLOSE:
+            title = "CALIBRATION PAUSED: TOO CLOSE"
+            instr = "STEP BACK - MOVE AWAY FROM CAMERA"
+            color = (0, 0, 255)  # Red / Amber alert
+        elif detector.last_distance_status == DistanceStatus.TOO_FAR:
+            title = "CALIBRATION PAUSED: TOO FAR"
+            instr = "STEP CLOSER - MOVE TOWARDS CAMERA"
+            color = (0, 140, 255)  # Amber alert
+        else:
+            return
+
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        title_scale = 0.65 if w >= 500 else 0.42
+        instr_scale = 0.50 if w >= 500 else 0.35
+        (tw, th), _ = cv2.getTextSize(title, font, title_scale, 2)
+        (iw, ih), _ = cv2.getTextSize(instr, font, instr_scale, 1)
+
+        box_w = min(w - 20, max(tw, iw) + 40)
+        box_h = th + ih + 40
+        x1 = max(0, (w - box_w) // 2)
+        y1 = max(0, (h - box_h) // 2)
+        x2 = min(w, x1 + box_w)
+        y2 = min(h, y1 + box_h)
+
+        overlay = img.copy()
+        cv2.rectangle(overlay, (x1, y1), (x2, y2), (20, 20, 20), -1)
+        cv2.rectangle(overlay, (x1, y1), (x2, y2), color, 2)
+        cv2.addWeighted(overlay, 0.85, img, 0.15, 0, img)
+
+        title_x = x1 + max(5, (box_w - tw) // 2)
+        title_y = y1 + 20 + th
+        cv2.putText(img, title, (title_x, title_y), font, title_scale, color, 2, cv2.LINE_AA)
+
+        instr_x = x1 + max(5, (box_w - iw) // 2)
+        instr_y = title_y + 12 + ih
+        cv2.putText(
+            img,
+            instr,
+            (instr_x, instr_y),
+            font,
+            instr_scale,
             (255, 255, 255),
             1,
             cv2.LINE_AA,

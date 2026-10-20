@@ -7,6 +7,7 @@ from irlsurfer.bench import (
 )
 from irlsurfer.detector import (
     DetectorState,
+    DistanceStatus,
     GestureConfig,
     GestureDetector,
     GestureEvent,
@@ -39,6 +40,7 @@ __version__ = "0.1.0"
 
 __all__ = [
     "DetectorState",
+    "DistanceStatus",
     "GestureConfig",
     "GestureDetector",
     "GestureEvent",

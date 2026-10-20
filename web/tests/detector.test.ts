@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { GestureDetector, DetectorState, GestureEvent } from '../src/detector';
+import {
+  GestureDetector,
+  DetectorState,
+  DistanceStatus,
+  GestureEvent,
+} from '../src/detector';
 import { Frame, Landmark } from '../src/landmarks';
 
 function createDummyFrame(
@@ -242,5 +247,98 @@ describe('GestureDetector Unit Tests', () => {
     // Invalid frame with visibility 0.2
     const evs = detector.processFrame(createDummyFrame(2.5, 0.2, 0.5, 0.2, undefined, undefined, 0.2));
     expect(evs).toEqual([]);
+  });
+
+  it('evaluates distance status and guidance message properly', () => {
+    expect(detector.lastDistanceStatus).toBe(DistanceStatus.UNKNOWN);
+    expect(detector.distanceGuidanceMessage).toBe('NO PERSON DETECTED');
+
+    // Null frame
+    expect(detector.getDistanceStatus(null)).toBe(DistanceStatus.UNKNOWN);
+
+    // Invalid visibility
+    const invFrame = createDummyFrame(1.0, 0.5, 0.5, 0.2, undefined, undefined, 0.2);
+    expect(detector.getDistanceStatus(invFrame)).toBe(DistanceStatus.UNKNOWN);
+
+    // Too far (< 0.14)
+    const farFrame = createDummyFrame(1.0, 0.5, 0.5, 0.10);
+    expect(detector.getDistanceStatus(farFrame)).toBe(DistanceStatus.TOO_FAR);
+
+    // Too close (> 0.45)
+    const closeFrame = createDummyFrame(1.0, 0.5, 0.5, 0.50);
+    expect(detector.getDistanceStatus(closeFrame)).toBe(DistanceStatus.TOO_CLOSE);
+
+    // Optimal
+    const optFrame = createDummyFrame(1.0, 0.5, 0.5, 0.25);
+    expect(detector.getDistanceStatus(optFrame)).toBe(DistanceStatus.OPTIMAL);
+
+    // Messages updated on frame process
+    detector.processFrame(closeFrame);
+    expect(detector.lastDistanceStatus).toBe(DistanceStatus.TOO_CLOSE);
+    expect(detector.distanceGuidanceMessage).toBe('STEP BACK - TOO CLOSE');
+
+    detector.processFrame(farFrame);
+    expect(detector.lastDistanceStatus).toBe(DistanceStatus.TOO_FAR);
+    expect(detector.distanceGuidanceMessage).toBe('STEP CLOSER - TOO FAR');
+
+    detector.processFrame(optFrame);
+    expect(detector.lastDistanceStatus).toBe(DistanceStatus.OPTIMAL);
+    expect(detector.distanceGuidanceMessage).toBe('DISTANCE OK');
+  });
+
+  it('gates calibration on optimal distance', () => {
+    expect(detector.state).toBe(DetectorState.CALIBRATING);
+    expect(detector.calibrationProgress).toBe(0.0);
+
+    // Feed TOO_CLOSE frames for 3s
+    for (let i = 0; i <= 30; i++) {
+      detector.processFrame(createDummyFrame(i * 0.1, 0.5, 0.5, 0.50));
+      expect(detector.state).toBe(DetectorState.CALIBRATING);
+      expect(detector.calibrationProgress).toBe(0.0);
+    }
+
+    // Feed 1s of OPTIMAL frames
+    for (let i = 0; i <= 10; i++) {
+      detector.processFrame(createDummyFrame(3.0 + i * 0.1, 0.5, 0.5, 0.20));
+    }
+    expect(detector.state).toBe(DetectorState.CALIBRATING);
+    expect(detector.calibrationProgress).toBeGreaterThanOrEqual(0.45);
+    expect(detector.calibrationProgress).toBeLessThanOrEqual(0.55);
+
+    // Pause due to distance for 5 seconds
+    const progBefore = detector.calibrationProgress;
+    for (let i = 0; i <= 50; i++) {
+      detector.processFrame(createDummyFrame(4.1 + i * 0.1, 0.5, 0.5, 0.08));
+      expect(detector.calibrationProgress).toBe(progBefore);
+    }
+
+    // Resume with optimal frames until calibrated
+    for (let i = 0; i <= 12; i++) {
+      detector.processFrame(createDummyFrame(9.2 + i * 0.1, 0.5, 0.5, 0.20));
+    }
+    expect(detector.state).toBe(DetectorState.ACTIVE);
+    expect(detector.calibrationProgress).toBe(1.0);
+  });
+
+  it('handles speed multiplier scaling of velocity thresholds and cooldowns', () => {
+    expect(detector.speedMultiplier).toBe(1.0);
+    expect(detector.jumpVelThresh).toBe(detector.baseJumpVelThresh);
+    expect(detector.duckVelThresh).toBe(detector.baseDuckVelThresh);
+    expect(detector.jumpCooldownSec).toBe(detector.baseJumpCooldownSec);
+
+    detector.setSpeedMultiplier(1.5);
+    expect(detector.speedMultiplier).toBe(1.5);
+    expect(detector.jumpVelThresh).toBeCloseTo(0.60 * 1.5, 4);
+    expect(detector.duckVelThresh).toBeCloseTo(-0.60 * 1.5, 4);
+    expect(detector.jumpCooldownSec).toBeCloseTo(0.50 / 1.5, 4);
+
+    // Clamping
+    detector.setSpeedMultiplier(0.1);
+    expect(detector.speedMultiplier).toBe(0.5);
+    expect(detector.jumpVelThresh).toBeCloseTo(0.60 * 0.5, 4);
+
+    detector.setSpeedMultiplier(4.0);
+    expect(detector.speedMultiplier).toBe(2.5);
+    expect(detector.jumpVelThresh).toBeCloseTo(0.60 * 2.5, 4);
   });
 });

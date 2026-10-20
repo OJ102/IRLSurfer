@@ -64,6 +64,14 @@ def create_parser() -> argparse.ArgumentParser:
         help="Path to gesture threshold config JSON file",
     )
     play_parser.add_argument(
+        "--speed",
+        "--sensitivity",
+        type=float,
+        default=1.0,
+        dest="speed",
+        help="Speed and sensitivity multiplier (range 0.5 to 2.5, default: 1.0)",
+    )
+    play_parser.add_argument(
         "--model",
         choices=["lite", "full", "heavy"],
         default="lite",
@@ -286,10 +294,20 @@ def run_play_loop(
                     detector.pause()
             elif key in (ord("c"), ord("C")):
                 detector.recalibrate()
+            elif key in (ord("+"), ord("=")):
+                new_scale = round(detector.speed_multiplier + 0.25, 2)
+                detector.set_speed_multiplier(new_scale)
+            elif key in (ord("-"), ord("_")):
+                new_scale = round(detector.speed_multiplier - 0.25, 2)
+                detector.set_speed_multiplier(new_scale)
 
 
 def play_command(args: argparse.Namespace) -> int:
     """Handle the 'play' subcommand."""
+    if not (0.5 <= args.speed <= 2.5):
+        logger.error("Speed multiplier must be between 0.5 and 2.5, got %s", args.speed)
+        return 1
+
     config_path = Path(args.config)
     if config_path.exists():
         config = GestureConfig.from_json_file(config_path)
@@ -306,6 +324,7 @@ def play_command(args: argparse.Namespace) -> int:
         backend = PynputBackend()
 
     detector = GestureDetector(config=config)
+    detector.set_speed_multiplier(args.speed)
     extractor = PoseExtractor(model_type=args.model)
     hud = DebugHUD(mirror=True)
 

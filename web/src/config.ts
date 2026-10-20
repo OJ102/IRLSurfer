@@ -19,6 +19,8 @@ export interface GestureConfig {
   hoverboard_cooldown_sec: number;
   recenter_alpha: number;
   min_visibility: number;
+  min_shoulder_width: number;
+  max_shoulder_width: number;
 }
 
 export const DEFAULT_GESTURE_CONFIG: GestureConfig = {
@@ -36,4 +38,6 @@ export const DEFAULT_GESTURE_CONFIG: GestureConfig = {
   hoverboard_cooldown_sec: Number(rawGesturesJson.hoverboard_cooldown_sec ?? 3.0),
   recenter_alpha: Number(rawGesturesJson.recenter_alpha ?? 0.05),
   min_visibility: Number(rawGesturesJson.min_visibility ?? 0.50),
+  min_shoulder_width: Number(rawGesturesJson.min_shoulder_width ?? 0.14),
+  max_shoulder_width: Number(rawGesturesJson.max_shoulder_width ?? 0.45),
 };

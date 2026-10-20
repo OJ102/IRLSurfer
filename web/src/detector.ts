@@ -14,6 +14,13 @@ export enum GestureEvent {
   HOVERBOARD = 'HOVERBOARD',
 }
 
+export enum DistanceStatus {
+  OPTIMAL = 'OPTIMAL',
+  TOO_CLOSE = 'TOO_CLOSE',
+  TOO_FAR = 'TOO_FAR',
+  UNKNOWN = 'UNKNOWN',
+}
+
 export enum DetectorState {
   CALIBRATING = 'CALIBRATING',
   ACTIVE = 'ACTIVE',
@@ -32,9 +39,15 @@ export class GestureDetector {
 
   // Calibration accumulation
   private _calibStartTime: number | null = null;
+  private _calibAccumulatedTime: number = 0.0;
+  private _calibLastTime: number | null = null;
+  private _calibWasInterrupted: boolean = false;
   private _calibXSamples: number[] = [];
   private _calibYSamples: number[] = [];
   private _calibSwSamples: number[] = [];
+
+  // Distance tracking
+  lastDistanceStatus: DistanceStatus = DistanceStatus.UNKNOWN;
 
   // Tracking state
   currentLane: number = 0; // -1: left, 0: center, +1: right
@@ -49,20 +62,82 @@ export class GestureDetector {
   private _wristTouchStartTime: number | null = null;
   private _hoverboardFiredForTouch: boolean = false;
 
+  // Speed and sensitivity scaling
+  readonly baseJumpVelThresh: number;
+  readonly baseDuckVelThresh: number;
+  readonly baseJumpCooldownSec: number;
+  readonly baseDuckCooldownSec: number;
+
+  speedMultiplier: number = 1.0;
+  jumpVelThresh: number;
+  duckVelThresh: number;
+  jumpCooldownSec: number;
+  duckCooldownSec: number;
+
   constructor(config?: Partial<GestureConfig>) {
     this.config = {
       ...DEFAULT_GESTURE_CONFIG,
       ...config,
     };
+    this.baseJumpVelThresh = this.config.jump_vel_thresh;
+    this.baseDuckVelThresh = this.config.duck_vel_thresh;
+    this.baseJumpCooldownSec = this.config.jump_cooldown_sec;
+    this.baseDuckCooldownSec = this.config.duck_cooldown_sec;
+
+    this.jumpVelThresh = this.baseJumpVelThresh;
+    this.duckVelThresh = this.baseDuckVelThresh;
+    this.jumpCooldownSec = this.baseJumpCooldownSec;
+    this.duckCooldownSec = this.baseDuckCooldownSec;
+  }
+
+  setSpeedMultiplier(scale: number): void {
+    const clamped = Math.max(0.5, Math.min(2.5, scale));
+    this.speedMultiplier = clamped;
+    this.jumpVelThresh = this.baseJumpVelThresh * clamped;
+    this.duckVelThresh = this.baseDuckVelThresh * clamped;
+    this.jumpCooldownSec = this.baseJumpCooldownSec / clamped;
+    this.duckCooldownSec = this.baseDuckCooldownSec / clamped;
   }
 
   get calibrationProgress(): number {
-    if (this.state !== DetectorState.CALIBRATING || this._calibStartTime === null) {
-      return this.state === DetectorState.CALIBRATING ? 0 : 1.0;
+    if (this.state !== DetectorState.CALIBRATING) {
+      return 1.0;
     }
-    const lastTime = this._lastTimestamp ?? this._calibStartTime;
-    const elapsed = lastTime - this._calibStartTime;
-    return Math.min(1.0, Math.max(0.0, elapsed / this.config.calibration_seconds));
+    if (this.config.calibration_seconds <= 0) {
+      return 1.0;
+    }
+    return Math.min(
+      1.0,
+      Math.max(0.0, this._calibAccumulatedTime / this.config.calibration_seconds),
+    );
+  }
+
+  get distanceGuidanceMessage(): string {
+    switch (this.lastDistanceStatus) {
+      case DistanceStatus.OPTIMAL:
+        return 'DISTANCE OK';
+      case DistanceStatus.TOO_CLOSE:
+        return 'STEP BACK - TOO CLOSE';
+      case DistanceStatus.TOO_FAR:
+        return 'STEP CLOSER - TOO FAR';
+      case DistanceStatus.UNKNOWN:
+      default:
+        return 'NO PERSON DETECTED';
+    }
+  }
+
+  getDistanceStatus(frame: Frame | null): DistanceStatus {
+    if (!frame || !frame.isValid(this.config.min_visibility)) {
+      return DistanceStatus.UNKNOWN;
+    }
+    const sw = frame.shoulderWidth;
+    if (sw < this.config.min_shoulder_width) {
+      return DistanceStatus.TOO_FAR;
+    }
+    if (sw > this.config.max_shoulder_width) {
+      return DistanceStatus.TOO_CLOSE;
+    }
+    return DistanceStatus.OPTIMAL;
   }
 
   pause(): void {
@@ -81,15 +156,21 @@ export class GestureDetector {
   recalibrate(): void {
     this.state = DetectorState.CALIBRATING;
     this._calibStartTime = null;
+    this._calibAccumulatedTime = 0.0;
+    this._calibLastTime = null;
+    this._calibWasInterrupted = false;
     this._calibXSamples = [];
     this._calibYSamples = [];
     this._calibSwSamples = [];
     this.currentLane = 0;
     this._wristTouchStartTime = null;
     this._hoverboardFiredForTouch = false;
+    this.lastDistanceStatus = DistanceStatus.UNKNOWN;
   }
 
   processFrame(frame: Frame): GestureEvent[] {
+    this.lastDistanceStatus = this.getDistanceStatus(frame);
+
     if (this.state === DetectorState.PAUSED) {
       return [];
     }
@@ -107,6 +188,11 @@ export class GestureDetector {
     const rawSw = frame.shoulderWidth;
 
     if (this.state === DetectorState.CALIBRATING) {
+      if (this.lastDistanceStatus !== DistanceStatus.OPTIMAL) {
+        this._calibLastTime = null;
+        this._calibWasInterrupted = true;
+        return [];
+      }
       return this._handleCalibration(mirroredX, rawY, rawSw, frame.timestamp);
     }
 
@@ -121,6 +207,21 @@ export class GestureDetector {
   ): GestureEvent[] {
     if (this._calibStartTime === null) {
       this._calibStartTime = timestamp;
+      this._calibLastTime = timestamp;
+      this._calibAccumulatedTime = 0.0;
+    } else if (this._calibLastTime !== null) {
+      const dt = Math.max(0.0, timestamp - this._calibLastTime);
+      this._calibAccumulatedTime += dt;
+      this._calibLastTime = timestamp;
+    } else if (
+      this._calibAccumulatedTime === 0.0 &&
+      timestamp > this._calibStartTime &&
+      !this._calibWasInterrupted
+    ) {
+      this._calibAccumulatedTime = timestamp - this._calibStartTime;
+      this._calibLastTime = timestamp;
+    } else {
+      this._calibLastTime = timestamp;
     }
 
     this._calibXSamples.push(mirroredX);
@@ -128,7 +229,7 @@ export class GestureDetector {
     this._calibSwSamples.push(rawSw);
     this._lastTimestamp = timestamp;
 
-    const elapsed = timestamp - this._calibStartTime;
+    const elapsed = this._calibAccumulatedTime;
     if (elapsed >= this.config.calibration_seconds && this._calibXSamples.length >= 2) {
       this.baseX =
         this._calibXSamples.reduce((a, b) => a + b, 0) / this._calibXSamples.length;
@@ -183,8 +284,8 @@ export class GestureDetector {
     // 2. Jump detection
     if (
       dy >= this.config.jump_dy_thresh &&
-      velY >= this.config.jump_vel_thresh &&
-      timestamp - this._lastJumpTime >= this.config.jump_cooldown_sec
+      velY >= this.jumpVelThresh &&
+      timestamp - this._lastJumpTime >= this.jumpCooldownSec
     ) {
       events.push(GestureEvent.JUMP);
       this._lastJumpTime = timestamp;
@@ -192,8 +293,8 @@ export class GestureDetector {
     // 3. Duck detection
     else if (
       dy <= this.config.duck_dy_thresh &&
-      velY <= this.config.duck_vel_thresh &&
-      timestamp - this._lastDuckTime >= this.config.duck_cooldown_sec
+      velY <= this.duckVelThresh &&
+      timestamp - this._lastDuckTime >= this.duckCooldownSec
     ) {
       events.push(GestureEvent.DUCK);
       this._lastDuckTime = timestamp;

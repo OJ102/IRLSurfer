@@ -22,6 +22,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   const cameraPrompt = document.getElementById('cameraPrompt') as HTMLDivElement;
   const cameraFps = document.getElementById('cameraFps') as HTMLSpanElement;
 
+  const speedSlider = document.getElementById('speedSlider') as HTMLInputElement | null;
+  const speedValue = document.getElementById('speedValue') as HTMLSpanElement | null;
+  const speedPresetBtns = document.querySelectorAll<HTMLButtonElement>('.speed-preset-btn');
+
   // Initialize Game Runner
   const game = new GameRunner(gameCanvas);
   game.start();
@@ -30,6 +34,43 @@ window.addEventListener('DOMContentLoaded', async () => {
   const detector = new GestureDetector();
   const hud = new CameraHUD(hudCanvas);
   const poseTracker = new PoseTracker();
+
+  // Speed Multiplier Controller logic
+  function applySpeed(multiplier: number, syncSlider: boolean = true): void {
+    const clamped = Math.max(0.5, Math.min(2.5, Math.round(multiplier * 100) / 100));
+    game.setSpeedMultiplier(clamped);
+    detector.setSpeedMultiplier(clamped);
+
+    if (speedValue) {
+      speedValue.textContent = `${clamped.toFixed(1)}x`;
+    }
+    if (speedSlider && syncSlider) {
+      speedSlider.value = clamped.toString();
+    }
+
+    speedPresetBtns.forEach((btn) => {
+      const btnSpeed = parseFloat(btn.dataset.speed || '1.0');
+      if (Math.abs(btnSpeed - clamped) < 0.04) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
+  if (speedSlider) {
+    speedSlider.addEventListener('input', () => {
+      const val = parseFloat(speedSlider.value);
+      applySpeed(val, false);
+    });
+  }
+
+  speedPresetBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const val = parseFloat(btn.dataset.speed || '1.0');
+      applySpeed(val, true);
+    });
+  });
 
   let isWebcamRunning = false;
   let lastCameraFrameTime = performance.now();
@@ -74,15 +115,24 @@ window.addEventListener('DOMContentLoaded', async () => {
     detector.recalibrate();
   });
 
-  // Global UX Hotkeys: 'p' for pause, 'c' for recalibrate
+  // Global UX Hotkeys: 'p' for pause, 'c' for recalibrate, '['/']' for speed
   window.addEventListener('keydown', (e) => {
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+    if (
+      (e.target instanceof HTMLInputElement && e.target !== speedSlider) ||
+      e.target instanceof HTMLTextAreaElement
+    ) {
       return;
     }
     if (e.key === 'p' || e.key === 'P') {
       togglePause();
     } else if (e.key === 'c' || e.key === 'C') {
       detector.recalibrate();
+    } else if (e.key === '[') {
+      e.preventDefault();
+      applySpeed(game.speedMultiplier - 0.25, true);
+    } else if (e.key === ']') {
+      e.preventDefault();
+      applySpeed(game.speedMultiplier + 0.25, true);
     }
   });
 

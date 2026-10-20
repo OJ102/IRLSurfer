@@ -12,5 +12,7 @@
   "hoverboard_hold_sec": 0.30,
   "hoverboard_cooldown_sec": 3.0,
   "recenter_alpha": 0.05,
-  "min_visibility": 0.50
+  "min_visibility": 0.50,
+  "min_shoulder_width": 0.14,
+  "max_shoulder_width": 0.45
 }

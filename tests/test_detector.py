@@ -4,13 +4,23 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from irlsurfer.detector import DetectorState, GestureDetector, GestureEvent
+from irlsurfer.detector import (
+    DetectorState,
+    DistanceStatus,
+    GestureDetector,
+    GestureEvent,
+)
 from irlsurfer.landmarks import Frame, Landmark
 
 
 def assert_state(detector: GestureDetector, expected: DetectorState) -> None:
     """Helper to assert detector state without triggering mypy type-narrowing overlap."""
     assert detector.state == expected
+
+
+def assert_distance_status(detector: GestureDetector, expected: DistanceStatus) -> None:
+    """Helper to assert distance status without triggering mypy type-narrowing overlap."""
+    assert detector.last_distance_status == expected
 
 
 def make_frame(
@@ -544,7 +554,7 @@ def test_detector_edge_cases() -> None:
     assert d_cfg.config.calibration_seconds == 1.0
 
     # 3. Small shoulder width during calibration
-    d_small = GestureDetector(config={"calibration_seconds": 0.1})
+    d_small = GestureDetector(config={"calibration_seconds": 0.1, "min_shoulder_width": 0.0005})
     d_small.process_frame(
         make_frame(0.0, center_x=0.5, center_y=0.5, shoulder_width=0.001, visibility=1.0)
     )
@@ -757,3 +767,168 @@ def test_timestamp_non_monotonicity_and_backwards() -> None:
     )
     assert ev4 == []
     assert_state(detector, DetectorState.ACTIVE)
+
+
+def test_distance_status_and_guidance_message() -> None:
+    detector = GestureDetector()
+    assert_distance_status(detector, DistanceStatus.UNKNOWN)
+    assert detector.distance_guidance_message == "NO PERSON DETECTED"
+
+    # None frame
+    assert detector.get_distance_status(None) == DistanceStatus.UNKNOWN
+
+    # Invalid visibility frame
+    invalid_f = make_frame(timestamp=1.0, shoulder_width=0.2, visibility=0.1)
+    assert detector.get_distance_status(invalid_f) == DistanceStatus.UNKNOWN
+
+    # Too far (shoulder width < 0.14)
+    far_f = make_frame(timestamp=1.0, shoulder_width=0.10)
+    assert detector.get_distance_status(far_f) == DistanceStatus.TOO_FAR
+
+    # Too close (shoulder width > 0.45)
+    close_f = make_frame(timestamp=1.0, shoulder_width=0.50)
+    assert detector.get_distance_status(close_f) == DistanceStatus.TOO_CLOSE
+
+    # Optimal (0.14 <= shoulder_width <= 0.45)
+    opt_f = make_frame(timestamp=1.0, shoulder_width=0.25)
+    assert detector.get_distance_status(opt_f) == DistanceStatus.OPTIMAL
+
+    # Process frame updates last_distance_status and distance_guidance_message
+    detector.process_frame(close_f)
+    assert_distance_status(detector, DistanceStatus.TOO_CLOSE)
+    assert detector.distance_guidance_message == "STEP BACK - TOO CLOSE"
+
+    detector.process_frame(far_f)
+    assert_distance_status(detector, DistanceStatus.TOO_FAR)
+    assert detector.distance_guidance_message == "STEP CLOSER - TOO FAR"
+
+    detector.process_frame(opt_f)
+    assert_distance_status(detector, DistanceStatus.OPTIMAL)
+    assert detector.distance_guidance_message == "DISTANCE OK"
+
+
+def test_calibration_gated_by_distance() -> None:
+    detector = GestureDetector()
+    assert_state(detector, DetectorState.CALIBRATING)
+    assert detector.calibration_progress == 0.0
+
+    # 1. Feed frames that are TOO_CLOSE (sw = 0.50) for 3.0s
+    for i in range(30):
+        t = i * 0.1
+        f = make_frame(timestamp=t, shoulder_width=0.50)
+        detector.process_frame(f)
+        assert_state(detector, DetectorState.CALIBRATING)
+        assert detector.calibration_progress == 0.0
+        assert_distance_status(detector, DistanceStatus.TOO_CLOSE)
+
+    # 2. Feed frames that are TOO_FAR (sw = 0.10) for 3.0s
+    for i in range(30):
+        t = 3.0 + i * 0.1
+        f = make_frame(timestamp=t, shoulder_width=0.10)
+        detector.process_frame(f)
+        assert_state(detector, DetectorState.CALIBRATING)
+        assert detector.calibration_progress == 0.0
+        assert_distance_status(detector, DistanceStatus.TOO_FAR)
+
+    # 3. Interrupted calibration:
+    # Feed 1.0s of OPTIMAL frames (t = 6.0 to 7.0)
+    for i in range(11):
+        t = 6.0 + i * 0.1
+        f = make_frame(timestamp=t, shoulder_width=0.20)
+        detector.process_frame(f)
+    assert_state(detector, DetectorState.CALIBRATING)
+    assert 0.45 <= detector.calibration_progress <= 0.55
+
+    # Pause due to TOO_CLOSE for 5.0 seconds (t = 7.1 to 12.0)
+    prog_before = detector.calibration_progress
+    for i in range(50):
+        t = 7.1 + i * 0.1
+        f = make_frame(timestamp=t, shoulder_width=0.50)
+        detector.process_frame(f)
+    assert_state(detector, DetectorState.CALIBRATING)
+    assert detector.calibration_progress == prog_before
+
+    # Resume with OPTIMAL frames until calibration finishes (remaining ~1.0s)
+    # At t = 12.1 to 13.2
+    for i in range(12):
+        t = 12.1 + i * 0.1
+        f = make_frame(timestamp=t, shoulder_width=0.20)
+        detector.process_frame(f)
+
+    assert_state(detector, DetectorState.ACTIVE)
+    assert detector.calibration_progress == 1.0
+
+
+def test_speed_multiplier_defaults_and_clamping() -> None:
+    detector = GestureDetector()
+    assert detector.speed_multiplier == 1.0
+    assert detector.jump_vel_thresh == detector.base_jump_vel_thresh
+    assert detector.duck_vel_thresh == detector.base_duck_vel_thresh
+    assert detector.jump_cooldown_sec == detector.base_jump_cooldown_sec
+    assert detector.duck_cooldown_sec == detector.base_duck_cooldown_sec
+
+    # Scaling to 1.5x
+    detector.speed_multiplier = 1.5
+    assert detector.speed_multiplier == 1.5
+    assert abs(detector.jump_vel_thresh - 0.60 * 1.5) < 1e-6
+    assert abs(detector.duck_vel_thresh - (-0.60 * 1.5)) < 1e-6
+    assert abs(detector.jump_cooldown_sec - 0.50 / 1.5) < 1e-6
+    assert abs(detector.duck_cooldown_sec - 0.50 / 1.5) < 1e-6
+
+    # Clamping below 0.5
+    detector.set_speed_multiplier(0.1)
+    assert detector.speed_multiplier == 0.5
+    assert abs(detector.jump_vel_thresh - 0.60 * 0.5) < 1e-6
+    assert abs(detector.jump_cooldown_sec - 0.50 / 0.5) < 1e-6
+
+    # Clamping above 2.5
+    detector.set_speed_multiplier(4.0)
+    assert detector.speed_multiplier == 2.5
+    assert abs(detector.jump_vel_thresh - 0.60 * 2.5) < 1e-6
+    assert abs(detector.jump_cooldown_sec - 0.50 / 2.5) < 1e-6
+
+
+def test_speed_multiplier_jump_and_cooldown_behavior() -> None:
+    detector = GestureDetector()
+    calibrate_detector(detector, base_center_x=0.5)
+
+    # Set speed to 2.0x -> jump_vel_thresh becomes 1.20, jump_cooldown_sec becomes 0.25s
+    detector.set_speed_multiplier(2.0)
+    assert detector.jump_vel_thresh == 1.20
+    assert detector.jump_cooldown_sec == 0.25
+
+    t = 2.5
+    # First frame at baseline
+    detector.process_frame(make_frame(timestamp=t, center_x=0.5, center_y=0.50, shoulder_width=0.2))
+
+    # Second frame with upward displacement dy = (0.5 - 0.46) / 0.2 = 0.20
+    # dy = 0.20 < jump_dy_thresh (0.22) -> no jump
+    t += 0.05
+    events_low_dy = detector.process_frame(
+        make_frame(timestamp=t, center_x=0.5, center_y=0.46, shoulder_width=0.2)
+    )
+    assert GestureEvent.JUMP not in events_low_dy
+
+    # Now a clear jump: dy = (0.5 - 0.40) / 0.2 = 0.50 >= 0.22,
+    # velocity vel_y = (0.50 - 0.20) / 0.05 = 6.0 >= 1.20
+    t += 0.05
+    events_jump = detector.process_frame(
+        make_frame(timestamp=t, center_x=0.5, center_y=0.40, shoulder_width=0.2)
+    )
+    assert GestureEvent.JUMP in events_jump
+
+    # Cooldown is 0.25s. At t + 0.15s, should still be in cooldown:
+    t += 0.15
+    events_cooldown = detector.process_frame(
+        make_frame(timestamp=t, center_x=0.5, center_y=0.35, shoulder_width=0.2)
+    )
+    assert GestureEvent.JUMP not in events_cooldown
+
+    # At t + 0.26s (> 0.25s cooldown), reset and jump again:
+    t += 0.15  # total delta from jump = 0.30s > 0.25s
+    detector.process_frame(make_frame(timestamp=t, center_x=0.5, center_y=0.50, shoulder_width=0.2))
+    t += 0.05
+    events_second_jump = detector.process_frame(
+        make_frame(timestamp=t, center_x=0.5, center_y=0.40, shoulder_width=0.2)
+    )
+    assert GestureEvent.JUMP in events_second_jump

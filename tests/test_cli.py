@@ -263,3 +263,50 @@ def test_play_command_success_with_pynput_and_defaults() -> None:
         mock_pynput.assert_called_once()
         mock_cap.release.assert_called_once()
         mock_extractor.close.assert_called_once()
+
+
+def test_cli_play_speed_argument_and_interactive_keys() -> None:
+    parser = create_parser()
+
+    # Default speed is 1.0
+    args_default = parser.parse_args(["play"])
+    assert args_default.speed == 1.0
+
+    # Custom speed via --speed
+    args_speed = parser.parse_args(["play", "--speed", "1.75"])
+    assert args_speed.speed == 1.75
+
+    # Custom speed via --sensitivity
+    args_sens = parser.parse_args(["play", "--sensitivity", "2.25"])
+    assert args_sens.speed == 2.25
+
+    # Interactive runtime keys '+' and '-'
+    mock_cap = MagicMock()
+    mock_cap.isOpened.return_value = True
+    dummy_frame = np.zeros((100, 100, 3), dtype=np.uint8)
+    mock_cap.read.return_value = (True, dummy_frame)
+
+    mock_extractor = MagicMock(spec=PoseExtractor)
+    mock_extractor.extract.return_value = None
+
+    detector = GestureDetector()
+    assert detector.speed_multiplier == 1.0
+
+    key_sequence = [ord("+"), ord("+"), ord("-"), ord("q")]
+
+    with (
+        patch("cv2.imshow"),
+        patch("cv2.waitKey", side_effect=key_sequence),
+    ):
+        run_play_loop(
+            cap=mock_cap,
+            extractor=mock_extractor,
+            detector=detector,
+            backend=NullBackend(),
+            hud=DebugHUD(mirror=False),
+            no_overlay=False,
+            max_frames=10,
+        )
+
+    # Started at 1.0, + 0.25 -> 1.25, + 0.25 -> 1.50, - 0.25 -> 1.25
+    assert abs(detector.speed_multiplier - 1.25) < 1e-6

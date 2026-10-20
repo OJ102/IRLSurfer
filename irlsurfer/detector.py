@@ -12,6 +12,15 @@ from typing import Any
 from irlsurfer.landmarks import Frame
 
 
+class DistanceStatus(StrEnum):
+    """Subject distance status relative to camera framing."""
+
+    OPTIMAL = "OPTIMAL"
+    TOO_CLOSE = "TOO_CLOSE"
+    TOO_FAR = "TOO_FAR"
+    UNKNOWN = "UNKNOWN"
+
+
 class GestureEvent(StrEnum):
     """Gesture events emitted by the detector."""
 
@@ -48,6 +57,8 @@ class GestureConfig:
     hoverboard_cooldown_sec: float = 3.0
     recenter_alpha: float = 0.05
     min_visibility: float = 0.50
+    min_shoulder_width: float = 0.14
+    max_shoulder_width: float = 0.45
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> GestureConfig:
@@ -67,6 +78,8 @@ class GestureConfig:
             hoverboard_cooldown_sec=float(data.get("hoverboard_cooldown_sec", 3.0)),
             recenter_alpha=float(data.get("recenter_alpha", 0.05)),
             min_visibility=float(data.get("min_visibility", 0.50)),
+            min_shoulder_width=float(data.get("min_shoulder_width", 0.14)),
+            max_shoulder_width=float(data.get("max_shoulder_width", 0.45)),
         )
 
     @classmethod
@@ -102,9 +115,15 @@ class GestureDetector:
 
         # Calibration accumulation
         self._calib_start_time: float | None = None
+        self._calib_accumulated_time: float = 0.0
+        self._calib_last_time: float | None = None
+        self._calib_was_interrupted: bool = False
         self._calib_x_samples: list[float] = []
         self._calib_y_samples: list[float] = []
         self._calib_sw_samples: list[float] = []
+
+        # Distance tracking
+        self.last_distance_status: DistanceStatus = DistanceStatus.UNKNOWN
 
         # Tracking state
         self.current_lane: int = 0  # -1: left, 0: center, +1: right
@@ -118,6 +137,71 @@ class GestureDetector:
         self._last_hoverboard_time: float = -1e9
         self._wrist_touch_start_time: float | None = None
         self._hoverboard_fired_for_touch: bool = False
+
+        # Speed and sensitivity scaling
+        self.base_jump_vel_thresh: float = self.config.jump_vel_thresh
+        self.base_duck_vel_thresh: float = self.config.duck_vel_thresh
+        self.base_jump_cooldown_sec: float = self.config.jump_cooldown_sec
+        self.base_duck_cooldown_sec: float = self.config.duck_cooldown_sec
+
+        self._speed_multiplier: float = 1.0
+        self.jump_vel_thresh: float = self.base_jump_vel_thresh
+        self.duck_vel_thresh: float = self.base_duck_vel_thresh
+        self.jump_cooldown_sec: float = self.base_jump_cooldown_sec
+        self.duck_cooldown_sec: float = self.base_duck_cooldown_sec
+
+    @property
+    def speed_multiplier(self) -> float:
+        """Active speed & sensitivity multiplier (range 0.5 to 2.5)."""
+        return self._speed_multiplier
+
+    @speed_multiplier.setter
+    def speed_multiplier(self, scale: float) -> None:
+        self.set_speed_multiplier(scale)
+
+    def set_speed_multiplier(self, scale: float) -> None:
+        """Set speed multiplier and adapt velocity thresholds and cooldowns."""
+        clamped = max(0.5, min(2.5, float(scale)))
+        self._speed_multiplier = clamped
+        self.jump_vel_thresh = self.base_jump_vel_thresh * clamped
+        self.duck_vel_thresh = self.base_duck_vel_thresh * clamped
+        self.jump_cooldown_sec = self.base_jump_cooldown_sec / clamped
+        self.duck_cooldown_sec = self.base_duck_cooldown_sec / clamped
+
+    @property
+    def calibration_progress(self) -> float:
+        """Calibration progress from 0.0 to 1.0."""
+        if self.state != DetectorState.CALIBRATING:
+            return 1.0
+        if self.config.calibration_seconds <= 0.0:
+            return 1.0
+        return min(
+            1.0,
+            max(0.0, self._calib_accumulated_time / self.config.calibration_seconds),
+        )
+
+    @property
+    def distance_guidance_message(self) -> str:
+        """Human-readable distance guidance message."""
+        if self.last_distance_status == DistanceStatus.OPTIMAL:
+            return "DISTANCE OK"
+        if self.last_distance_status == DistanceStatus.TOO_CLOSE:
+            return "STEP BACK - TOO CLOSE"
+        if self.last_distance_status == DistanceStatus.TOO_FAR:
+            return "STEP CLOSER - TOO FAR"
+        return "NO PERSON DETECTED"
+
+    def get_distance_status(self, frame: Frame | None) -> DistanceStatus:
+        """Evaluate user distance relative to optimal camera framing."""
+        if frame is None or not frame.is_valid(self.config.min_visibility):
+            return DistanceStatus.UNKNOWN
+
+        sw = frame.shoulder_width
+        if sw < self.config.min_shoulder_width:
+            return DistanceStatus.TOO_FAR
+        if sw > self.config.max_shoulder_width:
+            return DistanceStatus.TOO_CLOSE
+        return DistanceStatus.OPTIMAL
 
     def pause(self) -> None:
         """Pause gesture processing."""
@@ -134,15 +218,21 @@ class GestureDetector:
         """Trigger re-calibration."""
         self.state = DetectorState.CALIBRATING
         self._calib_start_time = None
+        self._calib_accumulated_time = 0.0
+        self._calib_last_time = None
+        self._calib_was_interrupted = False
         self._calib_x_samples.clear()
         self._calib_y_samples.clear()
         self._calib_sw_samples.clear()
         self.current_lane = 0
         self._wrist_touch_start_time = None
         self._hoverboard_fired_for_touch = False
+        self.last_distance_status = DistanceStatus.UNKNOWN
 
     def process_frame(self, frame: Frame) -> list[GestureEvent]:
         """Process a single frame and emit detected gestures."""
+        self.last_distance_status = self.get_distance_status(frame)
+
         if self.state == DetectorState.PAUSED:
             return []
 
@@ -158,6 +248,10 @@ class GestureDetector:
         raw_sw = frame.shoulder_width
 
         if self.state == DetectorState.CALIBRATING:
+            if self.last_distance_status != DistanceStatus.OPTIMAL:
+                self._calib_last_time = None
+                self._calib_was_interrupted = True
+                return []
             return self._handle_calibration(mirrored_x, raw_y, raw_sw, frame.timestamp)
 
         return self._handle_active(frame, mirrored_x, raw_y, frame.timestamp)
@@ -171,12 +265,28 @@ class GestureDetector:
     ) -> list[GestureEvent]:
         if self._calib_start_time is None:
             self._calib_start_time = timestamp
+            self._calib_last_time = timestamp
+            self._calib_accumulated_time = 0.0
+        elif self._calib_last_time is not None:
+            dt = max(0.0, timestamp - self._calib_last_time)
+            self._calib_accumulated_time += dt
+            self._calib_last_time = timestamp
+        elif (
+            self._calib_accumulated_time == 0.0
+            and timestamp > self._calib_start_time
+            and not self._calib_was_interrupted
+        ):
+            # Fallback for manual setups setting _calib_start_time directly
+            self._calib_accumulated_time = timestamp - self._calib_start_time
+            self._calib_last_time = timestamp
+        else:
+            self._calib_last_time = timestamp
 
         self._calib_x_samples.append(mirrored_x)
         self._calib_y_samples.append(raw_y)
         self._calib_sw_samples.append(raw_sw)
 
-        elapsed = timestamp - self._calib_start_time
+        elapsed = self._calib_accumulated_time
         if elapsed >= self.config.calibration_seconds and len(self._calib_x_samples) >= 2:
             self.base_x = sum(self._calib_x_samples) / len(self._calib_x_samples)
             self.base_y = sum(self._calib_y_samples) / len(self._calib_y_samples)
@@ -225,8 +335,8 @@ class GestureDetector:
         # 2. Jump detection
         if (
             dy >= self.config.jump_dy_thresh
-            and vel_y >= self.config.jump_vel_thresh
-            and (timestamp - self._last_jump_time) >= self.config.jump_cooldown_sec
+            and vel_y >= self.jump_vel_thresh
+            and (timestamp - self._last_jump_time) >= self.jump_cooldown_sec
         ):
             events.append(GestureEvent.JUMP)
             self._last_jump_time = timestamp
@@ -234,8 +344,8 @@ class GestureDetector:
         # 3. Duck detection
         elif (
             dy <= self.config.duck_dy_thresh
-            and vel_y <= self.config.duck_vel_thresh
-            and (timestamp - self._last_duck_time) >= self.config.duck_cooldown_sec
+            and vel_y <= self.duck_vel_thresh
+            and (timestamp - self._last_duck_time) >= self.duck_cooldown_sec
         ):
             events.append(GestureEvent.DUCK)
             self._last_duck_time = timestamp

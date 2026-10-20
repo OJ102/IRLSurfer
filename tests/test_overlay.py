@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import numpy as np
 
-from irlsurfer.detector import DetectorState, GestureConfig, GestureDetector, GestureEvent
+from irlsurfer.detector import (
+    DetectorState,
+    DistanceStatus,
+    GestureConfig,
+    GestureDetector,
+    GestureEvent,
+)
 from irlsurfer.landmarks import Frame, Landmark
 from irlsurfer.overlay import DebugHUD
 
@@ -193,3 +199,93 @@ def test_debug_hud_extreme_bounds_and_nan() -> None:
         latency_ms=2.0,
     )
     assert annotated.shape == (20, 20, 3)
+
+
+def test_debug_hud_distance_badges_and_alerts() -> None:
+    hud = DebugHUD(mirror=True)
+    img = np.zeros((480, 640, 3), dtype=np.uint8)
+
+    # 1. Calibrating with TOO_CLOSE distance
+    detector_close = GestureDetector()
+    close_frame = Frame(
+        timestamp=0.5,
+        left_shoulder=Landmark(x=0.2, y=0.3, visibility=0.9),
+        right_shoulder=Landmark(x=0.8, y=0.3, visibility=0.9),  # sw = 0.60 > 0.45
+        left_hip=Landmark(x=0.25, y=0.6, visibility=0.9),
+        right_hip=Landmark(x=0.75, y=0.6, visibility=0.9),
+        left_wrist=Landmark(x=0.45, y=0.5, visibility=0.9),
+        right_wrist=Landmark(x=0.55, y=0.5, visibility=0.9),
+    )
+    detector_close.process_frame(close_frame)
+    assert detector_close.last_distance_status == DistanceStatus.TOO_CLOSE
+
+    out_close = hud.render(img, close_frame, detector_close, fps=30.0, latency_ms=10.0)
+    assert out_close.shape == (480, 640, 3)
+    # Ensure overlay notice modified pixels
+    assert np.any(out_close > 0)
+
+    # 2. Calibrating with TOO_FAR distance
+    detector_far = GestureDetector()
+    far_frame = Frame(
+        timestamp=0.5,
+        left_shoulder=Landmark(x=0.46, y=0.3, visibility=0.9),
+        right_shoulder=Landmark(x=0.54, y=0.3, visibility=0.9),  # sw = 0.08 < 0.14
+        left_hip=Landmark(x=0.47, y=0.6, visibility=0.9),
+        right_hip=Landmark(x=0.53, y=0.6, visibility=0.9),
+        left_wrist=Landmark(x=0.49, y=0.5, visibility=0.9),
+        right_wrist=Landmark(x=0.51, y=0.5, visibility=0.9),
+    )
+    detector_far.process_frame(far_frame)
+    assert detector_far.last_distance_status == DistanceStatus.TOO_FAR
+
+    out_far = hud.render(img, far_frame, detector_far, fps=30.0, latency_ms=10.0)
+    assert out_far.shape == (480, 640, 3)
+    assert np.any(out_far > 0)
+
+    # 3. Active with OPTIMAL distance
+    detector_opt = GestureDetector(GestureConfig(calibration_seconds=0.01))
+    opt_frame = _make_sample_frame(0.1)
+    detector_opt.process_frame(_make_sample_frame(0.0))
+    detector_opt.process_frame(opt_frame)
+    assert detector_opt.state == DetectorState.ACTIVE
+    assert detector_opt.last_distance_status == DistanceStatus.OPTIMAL
+
+    out_opt = hud.render(img, opt_frame, detector_opt, fps=60.0, latency_ms=5.0)
+    assert out_opt.shape == (480, 640, 3)
+    assert np.any(out_opt > 0)
+
+
+def test_debug_hud_speed_multiplier_badge() -> None:
+    hud = DebugHUD(mirror=True)
+    img = np.zeros((480, 640, 3), dtype=np.uint8)
+
+    detector_default = GestureDetector(GestureConfig(calibration_seconds=0.01))
+    detector_default.process_frame(_make_sample_frame(0.0))
+    detector_default.process_frame(_make_sample_frame(0.1))
+    assert detector_default.speed_multiplier == 1.0
+
+    out_1x = hud.render(img, _make_sample_frame(0.2), detector_default, fps=30.0, latency_ms=10.0)
+    assert out_1x.shape == (480, 640, 3)
+
+    # Change to 2.0x speed
+    detector_turbo = GestureDetector(GestureConfig(calibration_seconds=0.01))
+    detector_turbo.process_frame(_make_sample_frame(0.0))
+    detector_turbo.process_frame(_make_sample_frame(0.1))
+    detector_turbo.set_speed_multiplier(2.0)
+    assert detector_turbo.speed_multiplier == 2.0
+
+    out_2x = hud.render(img, _make_sample_frame(0.2), detector_turbo, fps=30.0, latency_ms=10.0)
+    assert out_2x.shape == (480, 640, 3)
+
+    # Change to 0.5x speed
+    detector_slow = GestureDetector(GestureConfig(calibration_seconds=0.01))
+    detector_slow.process_frame(_make_sample_frame(0.0))
+    detector_slow.process_frame(_make_sample_frame(0.1))
+    detector_slow.set_speed_multiplier(0.5)
+
+    out_half = hud.render(img, _make_sample_frame(0.2), detector_slow, fps=30.0, latency_ms=10.0)
+    assert out_half.shape == (480, 640, 3)
+
+    # The header area (top 42 rows) should differ when speed badge text changes from 1.0x to 2.0x
+    header_diff = np.abs(out_1x[:42, :].astype(int) - out_2x[:42, :].astype(int))
+    assert np.sum(header_diff) > 0
