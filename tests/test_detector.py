@@ -561,3 +561,199 @@ def test_detector_edge_cases() -> None:
     ev2 = d.process_frame(make_frame(timestamp=2.5, center_x=0.5, center_y=0.5))
     assert ev1 == []
     assert ev2 == []
+
+    # 5. Zero / near-zero shoulder width fallback in calibration (base_sw <= 1e-4 -> 0.2)
+    d_fallback = GestureDetector(config={"calibration_seconds": 0.1})
+    d_fallback._calib_start_time = 0.0
+    d_fallback._calib_x_samples = [0.5, 0.5]
+    d_fallback._calib_y_samples = [0.5, 0.5]
+    d_fallback._calib_sw_samples = [0.0, 0.0]
+    d_fallback._handle_calibration(0.5, 0.5, 0.0, timestamp=0.2)
+    assert_state(d_fallback, DetectorState.ACTIVE)
+    assert d_fallback.base_sw == 0.2
+
+
+def test_double_lane_hop_right_to_left() -> None:
+    """Verify hopping directly from right lane (+1) to left lane (-1)."""
+    detector = GestureDetector()
+    calibrate_detector(detector, base_center_x=0.5)
+
+    # Move to right lane (+1): camera raw center_x moves left to 0.35
+    t = 2.5
+    for _ in range(5):
+        detector.process_frame(
+            make_frame(timestamp=t, center_x=0.35, center_y=0.5, shoulder_width=0.2)
+        )
+        t += 0.033
+    assert detector.current_lane == 1
+
+    # In one leap, jump all the way to left lane (-1): raw center_x = 0.70
+    # Mirrored x = 0.30 -> dx = (0.30 - 0.50) / 0.2 = -1.0 <= -enter_lane_thresh (-0.6)
+    events: list[GestureEvent] = []
+    for _ in range(5):
+        ev = detector.process_frame(
+            make_frame(timestamp=t, center_x=0.70, center_y=0.5, shoulder_width=0.2)
+        )
+        events.extend(ev)
+        t += 0.033
+
+    # Should emit two LANE_LEFT events
+    left_events = [e for e in events if e == GestureEvent.LANE_LEFT]
+    assert len(left_events) == 2
+    assert detector.current_lane == -1
+
+
+def test_landmarks_custom_object_and_list_conversion() -> None:
+    """Verify Frame conversions with custom point objects and Landmark lists."""
+
+    class CustomPoint:
+        def __init__(self, x: float, y: float, z: float = 0.1, visibility: float = 0.99) -> None:
+            self.x = x
+            self.y = y
+            self.z = z
+            self.visibility = visibility
+
+    dict_with_custom_objs = {
+        "timestamp": 5.0,
+        "left_shoulder": CustomPoint(0.4, 0.4),
+        "right_shoulder": CustomPoint(0.6, 0.4),
+        "left_hip": CustomPoint(0.4, 0.6),
+        "right_hip": CustomPoint(0.6, 0.6),
+        "left_wrist": CustomPoint(0.3, 0.7),
+        "right_wrist": CustomPoint(0.7, 0.7),
+        "nose": CustomPoint(0.5, 0.3),
+    }
+    frame = Frame.from_dict(dict_with_custom_objs)
+    assert frame.timestamp == 5.0
+    assert abs(frame.shoulder_width - 0.2) < 1e-6
+    assert frame.nose is not None
+    assert frame.nose.z == 0.1
+
+    # from_mediapipe with Landmark instances in the list
+    landmarks_list = [Landmark(0.5, 0.25)] + [Landmark(0.0, 0.0)] * 30
+    frame2 = Frame.from_mediapipe(landmarks_list, timestamp=6.0)
+    assert frame2.timestamp == 6.0
+    assert frame2.nose is not None
+    assert frame2.nose.x == 0.5
+
+
+def test_extreme_noise_frames_and_recovery() -> None:
+    """Verify detector handles wild coordinate spikes without exceptions or state corruption."""
+    detector = GestureDetector()
+    calibrate_detector(detector, base_center_x=0.5)
+
+    t = 2.5
+    # Extreme coordinate spike: user jumps off-screen or tracker hallucinates
+    noisy_frame = make_frame(
+        timestamp=t,
+        center_x=999.0,
+        center_y=-999.0,
+        shoulder_width=0.2,
+    )
+    # Shouldn't crash; might register jump or lane event depending on direction
+    detector.process_frame(noisy_frame)
+
+    # Immediately recover back to clean neutral center
+    t += 0.05
+    for _ in range(10):
+        detector.process_frame(
+            make_frame(timestamp=t, center_x=0.5, center_y=0.5, shoulder_width=0.2)
+        )
+        t += 0.05
+
+    # Should safely return to center lane
+    assert detector.current_lane == 0
+    assert_state(detector, DetectorState.ACTIVE)
+
+
+def test_rapid_consecutive_lane_toggles_hysteresis() -> None:
+    """Verify small oscillations around threshold boundary do not cause toggle flapping."""
+    detector = GestureDetector()
+    calibrate_detector(detector, base_center_x=0.5)
+
+    t = 2.5
+    # Cross enter threshold: dx = 0.65 -> triggers LANE_RIGHT
+    ev = detector.process_frame(
+        make_frame(timestamp=t, center_x=0.37, center_y=0.5, shoulder_width=0.2)
+    )
+    assert GestureEvent.LANE_RIGHT in ev
+    assert detector.current_lane == 1
+
+    # Jitter back and forth between dx = 0.58 and dx = 0.52 (above exit_lane_thresh 0.40)
+    for i in range(10):
+        t += 0.033
+        jitter_x = 0.384 if i % 2 == 0 else 0.396  # mirrored dx approx 0.58 and 0.52
+        ev_jitter = detector.process_frame(
+            make_frame(timestamp=t, center_x=jitter_x, center_y=0.5, shoulder_width=0.2)
+        )
+        # Should stay stably in lane 1 without repeatedly emitting events
+        assert ev_jitter == []
+        assert detector.current_lane == 1
+
+
+def test_rapid_vertical_toggles_and_cooldown() -> None:
+    """Verify jump and duck transitions, cooldown suppression, and opposite gesture transitions."""
+    detector = GestureDetector()
+    calibrate_detector(detector, base_center_x=0.5)
+
+    t = 2.5
+    # Jump trigger
+    ev1 = detector.process_frame(
+        make_frame(timestamp=t, center_x=0.5, center_y=0.40, shoulder_width=0.2)
+    )
+    assert GestureEvent.JUMP in ev1
+
+    # Immediately attempt another jump 0.1s later (cooldown is 0.50s)
+    t += 0.1
+    ev2 = detector.process_frame(
+        make_frame(timestamp=t, center_x=0.5, center_y=0.35, shoulder_width=0.2)
+    )
+    assert GestureEvent.JUMP not in ev2
+
+    # Now rapidly plunge down into a duck 0.1s later (downward velocity)
+    t += 0.1
+    ev3 = detector.process_frame(
+        make_frame(timestamp=t, center_x=0.5, center_y=0.65, shoulder_width=0.2)
+    )
+    assert GestureEvent.DUCK in ev3
+
+    # Attempt another duck within duck cooldown (< 0.50s)
+    t += 0.1
+    ev4 = detector.process_frame(
+        make_frame(timestamp=t, center_x=0.5, center_y=0.70, shoulder_width=0.2)
+    )
+    assert GestureEvent.DUCK not in ev4
+
+
+def test_timestamp_non_monotonicity_and_backwards() -> None:
+    """Verify detector handles zero dt and non-monotonic timestamps gracefully."""
+    detector = GestureDetector()
+    calibrate_detector(detector, base_center_x=0.5)
+
+    # Valid frame at t=2.5
+    ev1 = detector.process_frame(
+        make_frame(timestamp=2.5, center_x=0.5, center_y=0.5, shoulder_width=0.2)
+    )
+    assert ev1 == []
+
+    # Frame with duplicate timestamp (dt = 0.0)
+    ev2 = detector.process_frame(
+        make_frame(timestamp=2.5, center_x=0.5, center_y=0.35, shoulder_width=0.2)
+    )
+    # Zero dt prevents velocity calculation (vel_y = 0.0), so JUMP should NOT trigger
+    assert GestureEvent.JUMP not in ev2
+    assert detector.last_vel_y == 0.0
+
+    # Frame with backward/past timestamp (dt < 0.0)
+    ev3 = detector.process_frame(
+        make_frame(timestamp=2.1, center_x=0.5, center_y=0.35, shoulder_width=0.2)
+    )
+    assert GestureEvent.JUMP not in ev3
+    assert detector.last_vel_y == 0.0
+
+    # Normal advancing frame resumes detection
+    ev4 = detector.process_frame(
+        make_frame(timestamp=2.8, center_x=0.5, center_y=0.5, shoulder_width=0.2)
+    )
+    assert ev4 == []
+    assert_state(detector, DetectorState.ACTIVE)
