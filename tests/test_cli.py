@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+import pytest
 
 from irlsurfer.cli import create_parser, main, play_command, run_play_loop
 from irlsurfer.detector import DetectorState, GestureConfig, GestureDetector, GestureEvent
@@ -56,10 +58,65 @@ def test_cli_parser_custom_args() -> None:
     assert args.max_frames == 100
 
 
-def test_cli_subcommands_phase4_stubs() -> None:
+def test_cli_help_flags() -> None:
     for cmd in ("record", "label", "eval", "bench"):
-        ret = main([cmd])
+        with pytest.raises(SystemExit) as excinfo:
+            main([cmd, "--help"])
+        assert excinfo.value.code == 0
+
+
+def test_cli_eval_command() -> None:
+    ret = main(
+        [
+            "eval",
+            "--recording",
+            "data/recordings/clean_lanes.json",
+            "--labels",
+            "data/labels/clean_lanes_labels.json",
+            "--format",
+            "text",
+        ]
+    )
+    assert ret == 0
+
+
+def test_cli_bench_command() -> None:
+    ret = main(
+        [
+            "bench",
+            "--recording",
+            "data/recordings/clean_lanes.json",
+            "--labels",
+            "data/labels/clean_lanes_labels.json",
+            "--iterations",
+            "5",
+        ]
+    )
+    assert ret == 0
+
+
+def test_cli_record_command(tmp_path: Path) -> None:
+    out_file = tmp_path / "test_rec.json"
+    with patch("irlsurfer.record.record_live", return_value=out_file) as mock_rec:
+        ret = main(["record", "--output", str(out_file), "--duration", "1.0", "--no-overlay"])
         assert ret == 0
+        mock_rec.assert_called_once()
+
+
+def test_cli_label_command(tmp_path: Path) -> None:
+    out_file = tmp_path / "test_lbl.json"
+    ret = main(
+        [
+            "label",
+            "--recording",
+            "data/recordings/clean_lanes.json",
+            "--output",
+            str(out_file),
+            "--headless",
+        ]
+    )
+    assert ret == 0
+    assert out_file.exists()
 
 
 def test_cli_no_args_returns_1() -> None:
@@ -68,13 +125,11 @@ def test_cli_no_args_returns_1() -> None:
 
 
 def test_run_play_loop_with_max_frames() -> None:
-    # Setup mock VideoCapture yielding dummy frames
     mock_cap = MagicMock()
     mock_cap.isOpened.return_value = True
     dummy_frame = np.zeros((480, 640, 3), dtype=np.uint8)
     mock_cap.read.return_value = (True, dummy_frame)
 
-    # Setup mock PoseExtractor yielding Frame
     mock_extractor = MagicMock(spec=PoseExtractor)
     mock_frame = Frame(
         timestamp=1.0,
@@ -121,7 +176,6 @@ def test_run_play_loop_keyboard_controls() -> None:
     backend = NullBackend()
     hud = DebugHUD(mirror=False)
 
-    # Sequence of key presses: 'p' (pause), 'p' (resume), 'c' (recalibrate), 'q' (quit)
     key_sequence = [ord("p"), ord("p"), ord("c"), ord("q")]
 
     with (
@@ -158,8 +212,6 @@ def test_play_command_invalid_camera() -> None:
 
 def test_cli_parser_invalid_model_fails() -> None:
     parser = create_parser()
-    import pytest
-
     with pytest.raises(SystemExit):
         parser.parse_args(["play", "--model", "ultra"])
 

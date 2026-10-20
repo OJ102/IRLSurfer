@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "recording_file": "data/recordings/hoverboard_holds.json",
+  "labeled_at": "2026-10-20T03:40:14.744590+00:00",
+  "events": [
+    {
+      "timestamp": 5.3333,
+      "gesture": "HOVERBOARD"
+    },
+    {
+      "timestamp": 9.8,
+      "gesture": "HOVERBOARD"
+    }
+  ]
+}

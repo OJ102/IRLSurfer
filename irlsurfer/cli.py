@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import sys
 import time
@@ -75,11 +76,153 @@ def create_parser() -> argparse.ArgumentParser:
         help="Exit after processing max frames (useful for tests/benchmarks)",
     )
 
-    # Stubs for phase 4
-    subparsers.add_parser("record", help="Record video and ground truth pose sequences")
-    subparsers.add_parser("label", help="Annotate recorded pose datasets")
-    subparsers.add_parser("eval", help="Evaluate gesture detector precision/recall")
-    subparsers.add_parser("bench", help="Run latency and throughput benchmarks")
+    # record subcommand
+    record_parser = subparsers.add_parser(
+        "record",
+        help="Record video and ground truth pose sequences",
+    )
+    record_parser.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        default="data/recordings/recording.json",
+        help="Output path for recorded landmark JSON file",
+    )
+    record_parser.add_argument(
+        "--camera",
+        default="0",
+        help="Camera index or video file path (default: 0)",
+    )
+    record_parser.add_argument(
+        "--duration",
+        "-d",
+        type=float,
+        default=None,
+        help="Recording duration in seconds (stops when duration reached or 'q' pressed)",
+    )
+    record_parser.add_argument(
+        "--note",
+        type=str,
+        default="",
+        help="Optional descriptive note for the recording",
+    )
+    record_parser.add_argument(
+        "--model",
+        choices=["lite", "full", "heavy"],
+        default="lite",
+        help="MediaPipe model type (default: lite)",
+    )
+    record_parser.add_argument(
+        "--width",
+        type=int,
+        default=640,
+        help="Capture frame width (default: 640)",
+    )
+    record_parser.add_argument(
+        "--height",
+        type=int,
+        default=480,
+        help="Capture frame height (default: 480)",
+    )
+    record_parser.add_argument(
+        "--no-overlay",
+        action="store_true",
+        help="Run headless recording without OpenCV preview window",
+    )
+
+    # label subcommand
+    label_parser = subparsers.add_parser("label", help="Annotate recorded pose datasets")
+    label_parser.add_argument(
+        "--recording",
+        "-r",
+        type=str,
+        required=True,
+        help="Path to landmark recording JSON file",
+    )
+    label_parser.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        default=None,
+        help="Path to save ground truth label JSON file (default: data/labels/<name>_labels.json)",
+    )
+    label_parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Run headless without interactive GUI playback",
+    )
+
+    # eval subcommand
+    eval_parser = subparsers.add_parser("eval", help="Evaluate gesture detector precision/recall")
+    eval_parser.add_argument(
+        "--recording",
+        "-r",
+        type=str,
+        required=True,
+        help="Path to recorded landmark JSON file",
+    )
+    eval_parser.add_argument(
+        "--labels",
+        "-l",
+        type=str,
+        required=True,
+        help="Path to ground truth labels JSON file",
+    )
+    eval_parser.add_argument(
+        "--config",
+        "-c",
+        type=str,
+        default=None,
+        help="Optional path to gesture config JSON file",
+    )
+    eval_parser.add_argument(
+        "--tolerance",
+        "-t",
+        type=float,
+        default=0.15,
+        help="Temporal matching tolerance window in seconds (default: 0.15s)",
+    )
+    eval_parser.add_argument(
+        "--format",
+        choices=["markdown", "text", "json"],
+        default="markdown",
+        help="Output format: markdown, text, or json (default: markdown)",
+    )
+
+    # bench subcommand
+    bench_parser = subparsers.add_parser("bench", help="Run latency and throughput benchmarks")
+    bench_parser.add_argument(
+        "--recording",
+        "-r",
+        type=str,
+        default=None,
+        help="Optional path to recorded landmark JSON file for ablation studies",
+    )
+    bench_parser.add_argument(
+        "--labels",
+        "-l",
+        type=str,
+        default=None,
+        help="Optional path to labels JSON file for ablation evaluation",
+    )
+    bench_parser.add_argument(
+        "--iterations",
+        "-n",
+        type=int,
+        default=100,
+        help="Number of iterations for latency profiling (default: 100)",
+    )
+    bench_parser.add_argument(
+        "--ablation",
+        choices=["none", "filters", "gating", "all"],
+        default="all",
+        help="Ablation study to run (default: all)",
+    )
+    bench_parser.add_argument(
+        "--include-pose",
+        action="store_true",
+        help="Include full MediaPipe Pose extractor inference in latency profiling",
+    )
 
     return parser
 
@@ -200,6 +343,112 @@ def play_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def record_command(args: argparse.Namespace) -> int:
+    """Handle the 'record' subcommand."""
+    from irlsurfer.record import record_live
+
+    try:
+        out_path = record_live(
+            output_path=args.output,
+            camera=args.camera,
+            duration=args.duration,
+            width=args.width,
+            height=args.height,
+            model=args.model,
+            note=args.note,
+            no_overlay=args.no_overlay,
+        )
+        print(f"Recorded landmarks saved successfully to: {out_path}")
+        return 0
+    except Exception as e:
+        logger.error("Recording failed: %s", e)
+        return 1
+
+
+def label_command(args: argparse.Namespace) -> int:
+    """Handle the 'label' subcommand."""
+    from irlsurfer.label import label_recording
+
+    try:
+        dataset = label_recording(
+            recording_path=args.recording,
+            output_path=args.output,
+            headless=args.headless,
+        )
+        print(f"Labeled {len(dataset.events)} events. Dataset saved.")
+        return 0
+    except Exception as e:
+        logger.error("Labeling failed: %s", e)
+        return 1
+
+
+def eval_command(args: argparse.Namespace) -> int:
+    """Handle the 'eval' subcommand."""
+    from irlsurfer.evaluate import evaluate_files
+
+    try:
+        report = evaluate_files(
+            recording_path=args.recording,
+            label_path=args.labels,
+            config_path=args.config,
+            tolerance_sec=args.tolerance,
+        )
+        if args.format == "markdown":
+            print(report.to_markdown())
+        elif args.format == "text":
+            print(report.to_text())
+        elif args.format == "json":
+            print(json.dumps(report.to_dict(), indent=2))
+        return 0
+    except Exception as e:
+        logger.error("Evaluation failed: %s", e)
+        return 1
+
+
+def bench_command(args: argparse.Namespace) -> int:
+    """Handle the 'bench' subcommand."""
+    from irlsurfer.bench import (
+        LatencyProfiler,
+        format_ablation_filters_markdown,
+        format_ablation_gating_markdown,
+        run_ablation_filters,
+        run_ablation_gating,
+    )
+    from irlsurfer.label import LabelDataset
+    from irlsurfer.record import LandmarkRecorder
+
+    frames = None
+    if args.recording is not None:
+        _, frames = LandmarkRecorder.load(args.recording)
+
+    labels = None
+    if args.labels is not None:
+        labels = LabelDataset.load(args.labels)
+
+    # 1. Latency Profiling
+    profiler = LatencyProfiler()
+    profiler.profile_pipeline(
+        frames=frames,
+        iterations=args.iterations,
+        include_pose=args.include_pose,
+    )
+    print(profiler.to_markdown())
+    print()
+
+    # 2. Ablations (if recording provided)
+    if frames is not None and args.ablation in ("filters", "all"):
+        filter_res = run_ablation_filters(frames, ground_truth=labels)
+        print(format_ablation_filters_markdown(filter_res))
+        print()
+
+    if frames is not None and labels is not None and args.ablation in ("gating", "all"):
+        gating_res = run_ablation_gating(frames, ground_truth=labels)
+        print(format_ablation_gating_markdown(gating_res))
+        print()
+
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """CLI entry point."""
     parser = create_parser()
@@ -212,9 +461,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.subcommand == "play":
         return play_command(args)
-    if args.subcommand in ("record", "label", "eval", "bench"):
-        print(f"Command '{args.subcommand}' will be available in Phase 4.")
-        return 0
+    if args.subcommand == "record":
+        return record_command(args)
+    if args.subcommand == "label":
+        return label_command(args)
+    if args.subcommand == "eval":
+        return eval_command(args)
+    if args.subcommand == "bench":
+        return bench_command(args)
 
     parser.print_help()
     return 1

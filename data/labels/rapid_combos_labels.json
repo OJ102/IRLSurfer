@@ -1,0 +1,47 @@
+{
+  "version": "1.0",
+  "recording_file": "data/recordings/rapid_combos.json",
+  "labeled_at": "2026-10-20T03:40:14.773429+00:00",
+  "events": [
+    {
+      "timestamp": 3.0,
+      "gesture": "JUMP"
+    },
+    {
+      "timestamp": 3.6,
+      "gesture": "LANE_RIGHT"
+    },
+    {
+      "timestamp": 4.5,
+      "gesture": "LANE_LEFT"
+    },
+    {
+      "timestamp": 5.2,
+      "gesture": "DUCK"
+    },
+    {
+      "timestamp": 5.8,
+      "gesture": "LANE_LEFT"
+    },
+    {
+      "timestamp": 6.8,
+      "gesture": "LANE_RIGHT"
+    },
+    {
+      "timestamp": 8.0,
+      "gesture": "JUMP"
+    },
+    {
+      "timestamp": 8.7,
+      "gesture": "DUCK"
+    },
+    {
+      "timestamp": 10.0,
+      "gesture": "LANE_RIGHT"
+    },
+    {
+      "timestamp": 11.0,
+      "gesture": "LANE_LEFT"
+    }
+  ]
+}
