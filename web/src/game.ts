@@ -992,84 +992,99 @@ export class RunnerGame {
     vanishX: number,
     now: number,
   ): void {
-    // 1. Warm Golden Hour / Pacific Sky Gradient:
-    // Pacific blue sky (#38bdf8) down to warm golden peach (#fed7aa) and sunset yellow (#fef08a)
+    // 1. Rich Pacific Golden Hour Gradient:
+    // Deep Pacific oceanic blue -> vibrant coastal azure -> golden peach -> sunset yellow
     const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
     skyGrad.addColorStop(0, '#0284c7');     // Deep Pacific blue
-    skyGrad.addColorStop(0.35, '#38bdf8');  // Warm coastal sky
-    skyGrad.addColorStop(0.72, '#fed7aa');  // Warm golden peach
+    skyGrad.addColorStop(0.38, '#38bdf8');  // Coastal sky azure
+    skyGrad.addColorStop(0.72, '#fed7aa');  // Golden peach
     skyGrad.addColorStop(1.0, '#fef08a');   // Sunset golden yellow
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, w, horizonY);
 
-    // 2. Warm, gentle California Sun with soft natural lens flare & corona
+    // 2. Radiant California Sun with layered soft corona & specular glow
     const sunX = vanishX + Math.sin(now * 0.0002) * 20;
-    const sunY = horizonY - 14;
-    const sunRadius = 26;
+    const sunY = horizonY - 16;
+    const sunRadius = 28;
 
     ctx.save();
-    // Outer warm corona halo
-    const coronaGrad = ctx.createRadialGradient(sunX, sunY, 5, sunX, sunY, 95);
-    coronaGrad.addColorStop(0, 'rgba(254, 240, 138, 0.7)');
-    coronaGrad.addColorStop(0.4, 'rgba(254, 215, 170, 0.35)');
-    coronaGrad.addColorStop(1, 'rgba(254, 215, 170, 0)');
-    ctx.fillStyle = coronaGrad;
+    // Wide warm ambient corona
+    const outerCorona = ctx.createRadialGradient(sunX, sunY, 6, sunX, sunY, 110);
+    outerCorona.addColorStop(0, 'rgba(254, 240, 138, 0.55)');
+    outerCorona.addColorStop(0.35, 'rgba(254, 215, 170, 0.28)');
+    outerCorona.addColorStop(0.75, 'rgba(245, 158, 11, 0.1)');
+    outerCorona.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    ctx.fillStyle = outerCorona;
     ctx.beginPath();
-    ctx.arc(sunX, sunY, 95, 0, Math.PI * 2);
+    ctx.arc(sunX, sunY, 110, 0, Math.PI * 2);
     ctx.fill();
 
-    // Inner bright golden sun
+    // Mid warm radiant corona
+    const midCorona = ctx.createRadialGradient(sunX, sunY, 4, sunX, sunY, 55);
+    midCorona.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+    midCorona.addColorStop(0.4, 'rgba(254, 240, 138, 0.6)');
+    midCorona.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    ctx.fillStyle = midCorona;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, 55, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner bright golden sun core
     const sunCoreGrad = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, sunRadius);
     sunCoreGrad.addColorStop(0, '#ffffff');
-    sunCoreGrad.addColorStop(0.5, '#fef08a');
-    sunCoreGrad.addColorStop(1, '#f59e0b');
+    sunCoreGrad.addColorStop(0.45, '#fef08a');
+    sunCoreGrad.addColorStop(0.85, '#fbbf24');
+    sunCoreGrad.addColorStop(1.0, '#f59e0b');
     ctx.fillStyle = sunCoreGrad;
     ctx.beginPath();
     ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // 3. Distant warm coastal mountain cliffs (Malibu / Big Sur coastline)
-    const distantParallax = -this.state.currentLaneX * 10;
+    // 3. Distant warm coastal mountain ridges (Malibu / Big Sur coastline)
+    const distantParallax = -this.state.currentLaneX * 12;
     ctx.save();
-    ctx.fillStyle = '#b45309'; // Warm golden-brown cliff base
-    ctx.globalAlpha = 0.38;
 
-    // Mountain silhouettes in background
+    // Far mountain bluffs (soft warm terra-cotta with atmospheric haze)
+    ctx.fillStyle = '#9a3412';
+    ctx.globalAlpha = 0.32;
     ctx.beginPath();
     ctx.moveTo(0, horizonY);
-    ctx.lineTo(0, horizonY - 22);
-    ctx.quadraticCurveTo(w * 0.15 + distantParallax, horizonY - 45, w * 0.32 + distantParallax, horizonY - 24);
-    ctx.quadraticCurveTo(w * 0.48 + distantParallax, horizonY - 38, w * 0.65 + distantParallax, horizonY - 20);
-    ctx.quadraticCurveTo(w * 0.82 + distantParallax, horizonY - 40, w + 40, horizonY - 18);
+    ctx.lineTo(0, horizonY - 26);
+    ctx.quadraticCurveTo(w * 0.16 + distantParallax * 0.7, horizonY - 50, w * 0.34 + distantParallax * 0.7, horizonY - 28);
+    ctx.quadraticCurveTo(w * 0.52 + distantParallax * 0.7, horizonY - 44, w * 0.70 + distantParallax * 0.7, horizonY - 22);
+    ctx.quadraticCurveTo(w * 0.86 + distantParallax * 0.7, horizonY - 46, w + 40, horizonY - 20);
     ctx.lineTo(w, horizonY);
     ctx.closePath();
     ctx.fill();
 
-    // Mid-ground coastal bluffs
-    ctx.fillStyle = '#92400e';
-    ctx.globalAlpha = 0.55;
+    // Mid-ground coastal cliffs
+    ctx.fillStyle = '#78350f';
+    ctx.globalAlpha = 0.52;
     ctx.beginPath();
     ctx.moveTo(0, horizonY);
-    ctx.lineTo(0, horizonY - 12);
-    ctx.quadraticCurveTo(w * 0.22 + distantParallax * 1.3, horizonY - 26, w * 0.42 + distantParallax * 1.3, horizonY - 10);
-    ctx.quadraticCurveTo(w * 0.75 + distantParallax * 1.3, horizonY - 28, w, horizonY - 8);
+    ctx.lineTo(0, horizonY - 14);
+    ctx.quadraticCurveTo(w * 0.22 + distantParallax, horizonY - 30, w * 0.44 + distantParallax, horizonY - 12);
+    ctx.quadraticCurveTo(w * 0.76 + distantParallax, horizonY - 32, w, horizonY - 10);
     ctx.lineTo(w, horizonY);
     ctx.closePath();
     ctx.fill();
     ctx.restore();
 
-    // 4. Swaying California fan palm trees along the coast
+    // 4. Swaying California fan palm trees along the coastline
     this.drawPalmTrees(ctx, w, horizonY, distantParallax, now);
 
-    // 5. Gentle soaring seabirds / pelicans
+    // 5. Gentle soaring seabirds / pelicans with natural wing physics
     this.drawSeabirds(ctx, w, horizonY, now);
 
     // 6. Horizon line with warm ocean shimmer
     ctx.save();
-    ctx.strokeStyle = '#fef08a';
-    ctx.lineWidth = 1.5;
-    ctx.globalAlpha = 0.6;
+    const shimmerGrad = ctx.createLinearGradient(0, horizonY, w, horizonY);
+    shimmerGrad.addColorStop(0, 'rgba(254, 240, 138, 0.2)');
+    shimmerGrad.addColorStop(0.5, 'rgba(254, 240, 138, 0.85)');
+    shimmerGrad.addColorStop(1, 'rgba(254, 240, 138, 0.2)');
+    ctx.strokeStyle = shimmerGrad;
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
     ctx.moveTo(0, horizonY);
     ctx.lineTo(w, horizonY);
@@ -1086,39 +1101,40 @@ export class RunnerGame {
   ): void {
     ctx.save();
     const palmPositions = [
-      { x: w * 0.08, height: 38 },
-      { x: w * 0.16, height: 30 },
-      { x: w * 0.84, height: 34 },
-      { x: w * 0.92, height: 42 },
+      { x: w * 0.07, height: 42, lean: -0.15 },
+      { x: w * 0.15, height: 32, lean: 0.1 },
+      { x: w * 0.85, height: 36, lean: -0.12 },
+      { x: w * 0.93, height: 46, lean: 0.18 },
     ];
 
     for (const palm of palmPositions) {
-      const px = palm.x + parallax * 1.5;
+      const px = palm.x + parallax * 1.4;
       const py = horizonY;
-      const sway = Math.sin(now * 0.0018 + palm.x) * 3;
+      const sway = Math.sin(now * 0.0016 + palm.x) * 4;
 
-      // Slender curved trunk
-      ctx.strokeStyle = '#78350f';
-      ctx.lineWidth = 2.5;
+      // Curved wooden palm trunk
+      ctx.strokeStyle = '#5c320d';
+      ctx.lineWidth = 3.0;
+      ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(px, py);
-      ctx.quadraticCurveTo(px + sway * 0.5, py - palm.height * 0.5, px + sway, py - palm.height);
+      const midX = px + palm.lean * 12 + sway * 0.4;
+      const topX = px + palm.lean * 24 + sway;
+      const topY = py - palm.height;
+      ctx.quadraticCurveTo(midX, py - palm.height * 0.55, topX, topY);
       ctx.stroke();
 
-      // Palm fronds crown
-      const topX = px + sway;
-      const topY = py - palm.height;
-      ctx.strokeStyle = '#15803d'; // Warm palm green
-      ctx.lineWidth = 1.8;
-
-      const fronds = [-0.9, -0.5, -0.15, 0.2, 0.6, 0.95];
-      for (const f of fronds) {
+      // Palm fronds crown (Deep Pacific emerald / warm palm green)
+      ctx.lineWidth = 2.0;
+      const frondAngles = [-1.0, -0.65, -0.3, 0.0, 0.35, 0.7, 1.05];
+      for (const fa of frondAngles) {
+        ctx.strokeStyle = Math.abs(fa) > 0.5 ? '#15803d' : '#166534';
         ctx.beginPath();
         ctx.moveTo(topX, topY);
-        const fLen = 14;
-        const fx = topX + f * fLen;
-        const fy = topY + (1 - Math.abs(f) * 0.4) * (Math.abs(f) > 0.6 ? 5 : -4);
-        ctx.quadraticCurveTo(topX + f * (fLen * 0.6), topY - 5, fx, fy);
+        const fLen = 16;
+        const fx = topX + fa * fLen;
+        const fy = topY + (1 - Math.abs(fa) * 0.35) * (Math.abs(fa) > 0.6 ? 7 : -5);
+        ctx.quadraticCurveTo(topX + fa * (fLen * 0.55), topY - 7, fx, fy);
         ctx.stroke();
       }
     }
@@ -1132,17 +1148,18 @@ export class RunnerGame {
     now: number,
   ): void {
     ctx.save();
-    ctx.strokeStyle = '#475569';
-    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1.3;
+    ctx.lineCap = 'round';
     for (const bird of this._birds) {
       const bx = (bird.x * w) % (w + 40) - 20;
       const by = horizonY * bird.y;
-      const wingSway = Math.sin(now * 0.006 + bird.phase) * (bird.size * 0.35);
+      const wingSway = Math.sin(now * 0.0055 + bird.phase) * (bird.size * 0.38);
 
       ctx.beginPath();
       ctx.moveTo(bx - bird.size, by + wingSway);
-      ctx.quadraticCurveTo(bx - bird.size * 0.5, by - wingSway * 0.6, bx, by);
-      ctx.quadraticCurveTo(bx + bird.size * 0.5, by - wingSway * 0.6, bx + bird.size, by + wingSway);
+      ctx.quadraticCurveTo(bx - bird.size * 0.5, by - wingSway * 0.7, bx, by);
+      ctx.quadraticCurveTo(bx + bird.size * 0.5, by - wingSway * 0.7, bx + bird.size, by + wingSway);
       ctx.stroke();
     }
     ctx.restore();
@@ -1171,34 +1188,66 @@ export class RunnerGame {
     vanishX: number,
     now: number,
   ): void {
-    // 1. Pacific Ocean Waves on the sides:
-    // Gentle deep Pacific turquoise ocean waves on the sides with white foam crests
+    // 1. Deep Layered Pacific Ocean:
+    // Pacific oceanic blue -> turquoise swells -> beach sea-glass teal
     const oceanGrad = ctx.createLinearGradient(0, horizonY, 0, h);
-    oceanGrad.addColorStop(0, '#0369a1');  // Deep Pacific turquoise
-    oceanGrad.addColorStop(0.5, '#0284c7');
-    oceanGrad.addColorStop(1.0, '#0f766e'); // Coastal teal near beach
+    oceanGrad.addColorStop(0, '#0c4a6e');  // Deep Pacific horizon
+    oceanGrad.addColorStop(0.45, '#0284c7'); // Rich Pacific azure
+    oceanGrad.addColorStop(1.0, '#0f766e');  // Coastal sea-glass teal
     ctx.fillStyle = oceanGrad;
     ctx.fillRect(0, horizonY, w, h - horizonY);
 
-    // Animated ocean wave foam swells on the sides
+    // 2. Glowing Golden Specular Sunbeam Refractions on Ocean
+    const sunX = vanishX + Math.sin(now * 0.0002) * 20;
     ctx.save();
-    for (let wave = 0; wave < 6; wave++) {
-      const waveZ = ((wave * 0.16 + now * 0.0003) % 1.0);
-      const waveY = this.getTrackY(waveZ, h, horizonY);
-      const waveAlpha = Math.sin(waveZ * Math.PI) * 0.45;
+    for (let r = 0; r < 8; r++) {
+      const rZ = 0.08 + r * 0.11;
+      const ry = this.getTrackY(rZ, h, horizonY);
+      const rSway = Math.sin(now * 0.003 + r * 1.5) * (14 * rZ);
+      const rWidth = (35 + r * 20) * rZ;
 
+      const glintGrad = ctx.createLinearGradient(sunX + rSway - rWidth, ry, sunX + rSway + rWidth, ry);
+      glintGrad.addColorStop(0, 'rgba(254, 240, 138, 0)');
+      glintGrad.addColorStop(0.5, `rgba(254, 240, 138, ${0.45 * (1 - rZ * 0.4)})`);
+      glintGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+      ctx.fillStyle = glintGrad;
+      ctx.fillRect(sunX + rSway - rWidth, ry - 1.5, rWidth * 2, 3);
+    }
+    ctx.restore();
+
+    // 3. Animated Translucent Ocean Wave Swells with Seafoam Crests
+    ctx.save();
+    for (let wave = 0; wave < 7; wave++) {
+      const waveZ = ((wave * 0.14 + now * 0.00028) % 1.0);
+      if (waveZ < 0.04) continue;
+      const waveY = this.getTrackY(waveZ, h, horizonY);
+      const waveAlpha = Math.sin(waveZ * Math.PI) * 0.55;
+
+      // Swell body & white foam crest
       ctx.strokeStyle = `rgba(240, 253, 250, ${waveAlpha})`;
-      ctx.lineWidth = Math.max(1.5, 4 * waveZ);
+      ctx.lineWidth = Math.max(1.8, 5 * waveZ);
 
       // Left ocean wave swell
       const lLeft = 0;
       const lRight = this.getTrackX(-1.5, waveZ, w, vanishX);
       if (lRight > lLeft) {
         ctx.beginPath();
-        const crestOffset = Math.sin(now * 0.004 + wave) * 8;
+        const crestOffset = Math.sin(now * 0.0035 + wave * 1.2) * (10 * waveZ);
         ctx.moveTo(lLeft, waveY + crestOffset);
-        ctx.quadraticCurveTo(lRight * 0.5, waveY - 4 * waveZ + crestOffset, lRight, waveY);
+        ctx.quadraticCurveTo(lRight * 0.5, waveY - 6 * waveZ + crestOffset, lRight, waveY);
         ctx.stroke();
+
+        // Seafoam spray specks
+        if (waveZ > 0.3) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${waveAlpha * 0.8})`;
+          for (let s = 0; s < 3; s++) {
+            const sx = lLeft + (lRight - lLeft) * (0.3 + s * 0.25);
+            const sy = waveY - 4 * waveZ + crestOffset + Math.sin(now * 0.008 + s) * 3;
+            ctx.beginPath();
+            ctx.arc(sx, sy, Math.max(1, 2.5 * waveZ), 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
       }
 
       // Right ocean wave swell
@@ -1206,24 +1255,36 @@ export class RunnerGame {
       const rRight = w;
       if (rRight > rLeft) {
         ctx.beginPath();
-        const crestOffset = Math.cos(now * 0.004 + wave) * 8;
+        const crestOffset = Math.cos(now * 0.0035 + wave * 1.2) * (10 * waveZ);
         ctx.moveTo(rLeft, waveY);
-        ctx.quadraticCurveTo(rLeft + (rRight - rLeft) * 0.5, waveY - 4 * waveZ + crestOffset, rRight, waveY + crestOffset);
+        ctx.quadraticCurveTo(rLeft + (rRight - rLeft) * 0.5, waveY - 6 * waveZ + crestOffset, rRight, waveY + crestOffset);
         ctx.stroke();
+
+        // Seafoam spray specks
+        if (waveZ > 0.3) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${waveAlpha * 0.8})`;
+          for (let s = 0; s < 3; s++) {
+            const sx = rLeft + (rRight - rLeft) * (0.2 + s * 0.28);
+            const sy = waveY - 4 * waveZ + crestOffset + Math.cos(now * 0.008 + s) * 3;
+            ctx.beginPath();
+            ctx.arc(sx, sy, Math.max(1, 2.5 * waveZ), 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
       }
     }
     ctx.restore();
 
-    // 2. Sun-bleached wooden boardwalk / coastal pier with warm teak & oak planks
+    // 4. Sun-bleached Wooden Boardwalk Pier with Realistic Plank Variations
     const leftEdgeTop = this.getTrackX(-1.5, 0, w, vanishX);
     const leftEdgeBottom = this.getTrackX(-1.5, 1, w, vanishX);
     const rightEdgeTop = this.getTrackX(1.5, 0, w, vanishX);
     const rightEdgeBottom = this.getTrackX(1.5, 1, w, vanishX);
 
-    // Warm wooden plank surface fill
+    // Warm wooden plank boardwalk base fill
     const pierGrad = ctx.createLinearGradient(0, horizonY, 0, h);
-    pierGrad.addColorStop(0, '#8c5828');   // Warm oak at horizon
-    pierGrad.addColorStop(0.6, '#b47e43'); // Sun-bleached teak
+    pierGrad.addColorStop(0, '#78431b');   // Warm oak at horizon
+    pierGrad.addColorStop(0.5, '#ad753b'); // Sun-bleached teak
     pierGrad.addColorStop(1.0, '#cda06a'); // Golden bleached wood foreground
     ctx.beginPath();
     ctx.moveTo(leftEdgeTop, horizonY);
@@ -1234,36 +1295,76 @@ export class RunnerGame {
     ctx.fillStyle = pierGrad;
     ctx.fill();
 
-    // 3. Wooden boardwalk planks & wood grain seams
+    // 5. Individual Timber Planks with Tonal Variation, Seams & Nail Rivets
     ctx.save();
-    const numPlanks = 20;
+    const numPlanks = 22;
+    const plankTones = ['#b47e43', '#8c5828', '#cda06a', '#a16834'];
+
     for (let i = 0; i < numPlanks; i++) {
       const zNorm = ((i + this._trackOffset) % numPlanks) / numPlanks;
-      if (zNorm < 0.04 || zNorm > 0.98) continue;
-      const py = this.getTrackY(zNorm, h, horizonY);
-      const plx = this.getTrackX(-1.5, zNorm, w, vanishX);
-      const prx = this.getTrackX(1.5, zNorm, w, vanishX);
+      if (zNorm < 0.03 || zNorm > 0.98) continue;
+      const nextZ = Math.min(0.99, zNorm + 0.95 / numPlanks);
 
-      // Plank seam shadow
-      ctx.strokeStyle = 'rgba(67, 40, 16, 0.45)';
-      ctx.lineWidth = Math.max(1, 2.8 * zNorm);
+      const py1 = this.getTrackY(zNorm, h, horizonY);
+      const py2 = this.getTrackY(nextZ, h, horizonY);
+      const plx1 = this.getTrackX(-1.5, zNorm, w, vanishX);
+      const prx1 = this.getTrackX(1.5, zNorm, w, vanishX);
+      const plx2 = this.getTrackX(-1.5, nextZ, w, vanishX);
+      const prx2 = this.getTrackX(1.5, nextZ, w, vanishX);
+
+      // Plank body with subtle tonal variation
+      ctx.fillStyle = plankTones[i % plankTones.length];
+      ctx.globalAlpha = 0.28;
       ctx.beginPath();
-      ctx.moveTo(plx, py);
-      ctx.lineTo(prx, py);
+      ctx.moveTo(plx1, py1);
+      ctx.lineTo(prx1, py1);
+      ctx.lineTo(prx2, py2);
+      ctx.lineTo(plx2, py2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1.0;
+
+      // Deep plank seam shadow line
+      ctx.strokeStyle = 'rgba(45, 25, 10, 0.55)';
+      ctx.lineWidth = Math.max(1, 3 * zNorm);
+      ctx.beginPath();
+      ctx.moveTo(plx1, py1);
+      ctx.lineTo(prx1, py1);
       ctx.stroke();
 
-      // Subtle warm wood grain highlight
-      ctx.strokeStyle = 'rgba(254, 240, 138, 0.22)';
-      ctx.lineWidth = Math.max(0.7, 1.4 * zNorm);
+      // Top bevel specular highlight line
+      ctx.strokeStyle = 'rgba(255, 248, 220, 0.25)';
+      ctx.lineWidth = Math.max(0.6, 1.5 * zNorm);
       ctx.beginPath();
-      ctx.moveTo(plx, py - Math.max(1, 2 * zNorm));
-      ctx.lineTo(prx, py - Math.max(1, 2 * zNorm));
+      ctx.moveTo(plx1, py1 - Math.max(0.8, 1.8 * zNorm));
+      ctx.lineTo(prx1, py1 - Math.max(0.8, 1.8 * zNorm));
       ctx.stroke();
+
+      // Iron nail rivets on both plank edges
+      if (zNorm > 0.2) {
+        const rivetRadius = Math.max(1, 2.2 * zNorm);
+        const lOffset = (prx1 - plx1) * 0.04;
+        const rOffset = (prx1 - plx1) * 0.96;
+
+        // Dark iron rivet
+        ctx.fillStyle = '#291e13';
+        ctx.beginPath();
+        ctx.arc(plx1 + lOffset, py1 + (py2 - py1) * 0.5, rivetRadius, 0, Math.PI * 2);
+        ctx.arc(plx1 + rOffset, py1 + (py2 - py1) * 0.5, rivetRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rivet specular metallic glint
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.beginPath();
+        ctx.arc(plx1 + lOffset - 0.5, py1 + (py2 - py1) * 0.5 - 0.5, rivetRadius * 0.4, 0, Math.PI * 2);
+        ctx.arc(plx1 + rOffset - 0.5, py1 + (py2 - py1) * 0.5 - 0.5, rivetRadius * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
-    // 4. Clean white painted lane lines (clean, soft weathered paint, NO glowing laser rails)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
-    ctx.lineWidth = 2.2;
+    // 6. Clean White Painted Lane Marks (Soft weathered paint)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.68)';
+    ctx.lineWidth = 2.4;
     ctx.setLineDash([14, 18]);
     for (const laneDiv of [-0.5, 0.5]) {
       const topX = this.getTrackX(laneDiv, 0, w, vanishX);
@@ -1275,36 +1376,67 @@ export class RunnerGame {
     }
     ctx.setLineDash([]);
 
-    // 5. Pier edge posts and weathered wooden pilings along the boardwalk borders
+    // 7. Pier Timber Pilings with Weathered Caps & Nautical Hanging Rope Rails
     for (const laneDiv of [-1.5, 1.5]) {
       const topX = this.getTrackX(laneDiv, 0, w, vanishX);
       const bottomX = this.getTrackX(laneDiv, 1, w, vanishX);
 
-      // Outer border curb
-      ctx.strokeStyle = '#5c3d1e';
-      ctx.lineWidth = 3.5;
+      // Outer border timber curb
+      ctx.strokeStyle = '#4a2810';
+      ctx.lineWidth = 3.8;
       ctx.beginPath();
       ctx.moveTo(topX, horizonY);
       ctx.lineTo(bottomX, h);
       ctx.stroke();
 
-      // Pier wooden posts spaced along edges
+      // Pier wooden posts and hanging nautical rope swag
       const numPosts = 10;
+      const postCoords: Array<{ x: number; y: number; h: number; w: number; z: number }> = [];
+
       for (let p = 0; p < numPosts; p++) {
         const postZ = ((p + this._trackOffset * 0.5) % numPosts) / numPosts;
         if (postZ < 0.08 || postZ > 0.98) continue;
         const postX = this.getTrackX(laneDiv, postZ, w, vanishX);
         const postY = this.getTrackY(postZ, h, horizonY);
-        const postH = Math.max(6, 26 * postZ);
-        const postW = Math.max(2, 6 * postZ);
+        const postH = Math.max(6, 28 * postZ);
+        const postW = Math.max(2.5, 7 * postZ);
+        postCoords.push({ x: postX, y: postY, h: postH, w: postW, z: postZ });
+      }
 
-        // Wooden post
-        ctx.fillStyle = '#6b421a';
-        ctx.fillRect(postX - postW * 0.5, postY - postH, postW, postH);
+      // Sort posts by depth
+      postCoords.sort((a, b) => a.z - b.z);
 
-        // Weathered white cap on pier post
-        ctx.fillStyle = '#f1f5f9';
-        ctx.fillRect(postX - postW * 0.5, postY - postH, postW, Math.max(2, 6 * postZ));
+      // Draw nautical hanging rope swag between consecutive pilings
+      ctx.strokeStyle = '#d4a373';
+      for (let k = 0; k < postCoords.length - 1; k++) {
+        const p1 = postCoords[k];
+        const p2 = postCoords[k + 1];
+        if (p2.z - p1.z > 0.3) continue;
+
+        ctx.lineWidth = Math.max(1, 2.4 * p1.z);
+        ctx.beginPath();
+        const topY1 = p1.y - p1.h * 0.75;
+        const topY2 = p2.y - p2.h * 0.75;
+        const midRopeX = (p1.x + p2.x) * 0.5;
+        const midRopeY = (topY1 + topY2) * 0.5 + Math.max(2, 6 * p1.z); // Catenary sag
+        ctx.moveTo(p1.x, topY1);
+        ctx.quadraticCurveTo(midRopeX, midRopeY, p2.x, topY2);
+        ctx.stroke();
+      }
+
+      // Draw timber pilings
+      for (const p of postCoords) {
+        // Timber post
+        ctx.fillStyle = '#5c320d';
+        ctx.fillRect(p.x - p.w * 0.5, p.y - p.h, p.w, p.h);
+
+        // Weathered white painted cap
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(p.x - p.w * 0.5, p.y - p.h, p.w, Math.max(2.2, 6.5 * p.z));
+
+        // Iron piling band
+        ctx.fillStyle = '#291e13';
+        ctx.fillRect(p.x - p.w * 0.5, p.y - p.h * 0.78, p.w, Math.max(1, 2 * p.z));
       }
     }
 
@@ -1324,44 +1456,56 @@ export class RunnerGame {
       if (coin.collected || coin.z < 0.05 || coin.z > 1.05) continue;
 
       const cx = this.getTrackX(coin.lane, coin.z, w, vanishX);
-      const cy = this.getTrackY(coin.z, h, horizonY) - 18 * coin.z;
-      const radius = Math.max(4, 16 * coin.z);
+      const groundY = this.getTrackY(coin.z, h, horizonY);
+      const floatOffset = Math.sin(now * 0.005 + coin.id * 1.5) * (4 * coin.z);
+      const cy = groundY - 20 * coin.z + floatOffset;
+      const radius = Math.max(4.5, 17 * coin.z);
 
       // 3D spin rotation
-      const spinAngle = now * 0.005 + coin.id * 1.2;
+      const spinAngle = now * 0.0045 + coin.id * 1.2;
       const cosSpin = Math.cos(spinAngle);
 
-      // Golden Starfish shape
       ctx.save();
       ctx.translate(cx, cy);
-      ctx.scale(Math.max(0.2, Math.abs(cosSpin)), 1.0);
+      ctx.scale(Math.max(0.18, Math.abs(cosSpin)), 1.0);
 
-      // Warm golden drop shadow on boardwalk
-      ctx.fillStyle = '#b45309';
-      this.drawStarShape(ctx, 1.5, radius, radius * 0.48);
+      // Ambient occlusion drop shadow on boardwalk
+      ctx.fillStyle = 'rgba(60, 35, 15, 0.45)';
+      this.drawStarShape(ctx, 4 * coin.z, radius * 1.05, radius * 0.5);
       ctx.fill();
 
-      // Sparkling golden starfish body
-      ctx.fillStyle = '#fbbf24';
+      // Shaded 3D golden starfish body
+      const starGrad = ctx.createRadialGradient(0, 0, radius * 0.2, 0, 0, radius);
+      starGrad.addColorStop(0, '#fef08a'); // Warm golden center
+      starGrad.addColorStop(0.5, '#fbbf24');
+      starGrad.addColorStop(1.0, '#d97706'); // Deep amber edges
+      ctx.fillStyle = starGrad;
       ctx.shadowColor = '#f59e0b';
       ctx.shadowBlur = 10 * coin.z;
       this.drawStarShape(ctx, 0, radius, radius * 0.48);
       ctx.fill();
 
-      // Inner starfish core & warm highlight
+      // Raised arm ridges & center disc
       ctx.fillStyle = '#fef08a';
-      this.drawStarShape(ctx, 0, radius * 0.6, radius * 0.28);
+      ctx.shadowBlur = 0;
+      this.drawStarShape(ctx, 0, radius * 0.58, radius * 0.28);
+      ctx.fill();
+
+      // Center starfish nodule
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.max(1, 2.5 * coin.z), 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
 
-      // Gentle golden glint sparkle
+      // Animated specular glint sparkles
       const sparkleAngle = now * 0.004 + coin.id;
-      const sRadius = radius * 1.3;
+      const sRadius = radius * 1.25;
       for (let s = 0; s < 3; s++) {
         const a = sparkleAngle + (s * Math.PI * 2) / 3;
         const sx = cx + Math.cos(a) * sRadius * 0.8;
         const sy = cy + Math.sin(a) * sRadius * 0.5;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
         ctx.beginPath();
         ctx.arc(sx, sy, Math.max(1, 2 * coin.z), 0, Math.PI * 2);
         ctx.fill();
@@ -1408,12 +1552,12 @@ export class RunnerGame {
       switch (obs.type) {
         case ObstacleType.HIGH_BEAM: {
           // Beach Canopy Umbrella Awning / Hanging "SURF SHACK" sign (Must duck)
-          const beamY = groundY - Math.max(24, 68 * obs.z);
-          const awningH = Math.max(8, 24 * obs.z);
+          const beamY = groundY - Math.max(24, 70 * obs.z);
+          const awningH = Math.max(8, 26 * obs.z);
 
-          // Support bamboo/wooden side poles
+          // Support bamboo/weathered cedar poles with rope bindings
           ctx.strokeStyle = '#78350f';
-          ctx.lineWidth = Math.max(1.5, 3.5 * obs.z);
+          ctx.lineWidth = Math.max(1.8, 4 * obs.z);
           ctx.beginPath();
           ctx.moveTo(cx - width * 0.5, groundY);
           ctx.lineTo(cx - width * 0.5, beamY);
@@ -1421,116 +1565,169 @@ export class RunnerGame {
           ctx.lineTo(cx + width * 0.5, beamY);
           ctx.stroke();
 
-          // Striped beach canopy awning (Coral & Warm Cream stripes)
+          // Rope bindings on poles
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = Math.max(1, 2 * obs.z);
+          for (const px of [cx - width * 0.5, cx + width * 0.5]) {
+            ctx.beginPath();
+            ctx.moveTo(px - 3 * obs.z, beamY + 6 * obs.z);
+            ctx.lineTo(px + 3 * obs.z, beamY + 6 * obs.z);
+            ctx.stroke();
+          }
+
+          // Striped beach canopy awning (Pacific Coral & Vintage Cream)
           const numStripes = 6;
           const stripeW = width / numStripes;
           for (let s = 0; s < numStripes; s++) {
             ctx.fillStyle = s % 2 === 0 ? '#f97316' : '#fffbeb';
-            ctx.fillRect(cx - width * 0.5 + s * stripeW, beamY, stripeW, awningH);
+            const sx = cx - width * 0.5 + s * stripeW;
+            ctx.fillRect(sx, beamY, stripeW, awningH);
+
+            // Scalloped bottom fringe on awning
+            ctx.beginPath();
+            ctx.arc(sx + stripeW * 0.5, beamY + awningH, stripeW * 0.45, 0, Math.PI);
+            ctx.fill();
           }
 
-          // Weathered hanging "SURF SHACK" wooden sign
-          const signH = Math.max(6, 16 * obs.z);
-          const signY = beamY + awningH;
-          ctx.fillStyle = '#b45309';
-          ctx.fillRect(cx - width * 0.4, signY, width * 0.8, signH);
-          ctx.strokeStyle = '#78350f';
-          ctx.lineWidth = 1.2;
-          ctx.strokeRect(cx - width * 0.4, signY, width * 0.8, signH);
+          // Weathered timber hanging "SURF SHACK" wooden sign
+          const signH = Math.max(6, 18 * obs.z);
+          const signY = beamY + awningH + 4 * obs.z;
+          const signW = width * 0.82;
 
-          // "SURF SHACK" / "▼ DUCK ▼" tag
-          if (obs.z > 0.35) {
-            ctx.fillStyle = '#fffbeb';
-            ctx.font = `bold ${Math.floor(10 * obs.z)}px system-ui, sans-serif`;
+          // Iron chain links holding the sign
+          ctx.strokeStyle = '#475569';
+          ctx.lineWidth = Math.max(1, 1.8 * obs.z);
+          ctx.beginPath();
+          ctx.moveTo(cx - signW * 0.35, beamY + awningH);
+          ctx.lineTo(cx - signW * 0.35, signY);
+          ctx.moveTo(cx + signW * 0.35, beamY + awningH);
+          ctx.lineTo(cx + signW * 0.35, signY);
+          ctx.stroke();
+
+          // Timber board
+          ctx.fillStyle = '#92400e';
+          this.drawRoundedRect(ctx, cx - signW * 0.5, signY, signW, signH, 3);
+          ctx.fill();
+          ctx.strokeStyle = '#5c320d';
+          ctx.lineWidth = 1.2;
+          this.drawRoundedRect(ctx, cx - signW * 0.5, signY, signW, signH, 3);
+          ctx.stroke();
+
+          // "SURF SHACK ▼ DUCK ▼" tag
+          if (obs.z > 0.32) {
+            ctx.fillStyle = '#fef08a';
+            ctx.font = `bold ${Math.floor(10.5 * obs.z)}px "Outfit", "Plus Jakarta Sans", system-ui, sans-serif`;
             ctx.textAlign = 'center';
-            ctx.fillText('SURF SHACK ▼ DUCK ▼', cx, signY + signH * 0.75);
+            ctx.fillText('SURF SHACK ▼ DUCK ▼', cx, signY + signH * 0.72);
           }
           break;
         }
 
         case ObstacleType.LOW_HURDLE: {
           // Sun-bleached driftwood log & beach volleyball net (Must jump over)
-          const hurdleH = Math.max(8, 28 * obs.z);
+          const hurdleH = Math.max(8, 29 * obs.z);
 
-          // Wooden volleyball posts on sides
-          ctx.fillStyle = '#78350f';
-          const postW = Math.max(2, 5 * obs.z);
-          ctx.fillRect(cx - width * 0.5, groundY - hurdleH - 4 * obs.z, postW, hurdleH + 4 * obs.z);
-          ctx.fillRect(cx + width * 0.5 - postW, groundY - hurdleH - 4 * obs.z, postW, hurdleH + 4 * obs.z);
+          // Weathered volleyball driftwood posts on sides
+          ctx.fillStyle = '#6b421a';
+          const postW = Math.max(2.5, 6 * obs.z);
+          ctx.fillRect(cx - width * 0.5, groundY - hurdleH - 5 * obs.z, postW, hurdleH + 5 * obs.z);
+          ctx.fillRect(cx + width * 0.5 - postW, groundY - hurdleH - 5 * obs.z, postW, hurdleH + 5 * obs.z);
 
-          // Beach Volleyball Net Mesh with warm coral top tape
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-          ctx.fillRect(cx - width * 0.5 + postW, groundY - hurdleH, width - postW * 2, hurdleH * 0.75);
+          // Flutter ribbons on top of posts
+          ctx.fillStyle = '#f43f5e';
+          ctx.beginPath();
+          ctx.moveTo(cx - width * 0.5, groundY - hurdleH - 5 * obs.z);
+          ctx.lineTo(cx - width * 0.5 - 6 * obs.z, groundY - hurdleH - 8 * obs.z);
+          ctx.lineTo(cx - width * 0.5, groundY - hurdleH - 2 * obs.z);
+          ctx.fill();
+
+          // Beach Volleyball Net Mesh with translucent braided netting
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.42)';
+          ctx.fillRect(cx - width * 0.5 + postW, groundY - hurdleH, width - postW * 2, hurdleH * 0.78);
 
           // Net mesh crosslines
-          ctx.strokeStyle = 'rgba(203, 213, 225, 0.6)';
+          ctx.strokeStyle = 'rgba(203, 213, 225, 0.65)';
           ctx.lineWidth = 0.8;
           ctx.beginPath();
           const meshSpacing = Math.max(4, 8 * obs.z);
           for (let mx = cx - width * 0.45; mx < cx + width * 0.45; mx += meshSpacing) {
             ctx.moveTo(mx, groundY - hurdleH);
-            ctx.lineTo(mx, groundY - hurdleH * 0.25);
+            ctx.lineTo(mx, groundY - hurdleH * 0.22);
           }
           ctx.stroke();
 
-          // Top tape in warm coastal coral
-          ctx.fillStyle = '#f97316';
-          ctx.fillRect(cx - width * 0.5, groundY - hurdleH - 2 * obs.z, width, Math.max(2, 5 * obs.z));
+          // Top tape banner in warm coastal coral
+          ctx.fillStyle = '#fb7185';
+          ctx.fillRect(cx - width * 0.5, groundY - hurdleH - 2 * obs.z, width, Math.max(2.5, 5.5 * obs.z));
 
           // Driftwood log on boardwalk base
-          ctx.fillStyle = '#a16207';
-          ctx.beginPath();
-          ctx.roundRect
-            ? ctx.roundRect(cx - width * 0.48, groundY - 6 * obs.z, width * 0.96, 6 * obs.z, 3)
-            : ctx.rect(cx - width * 0.48, groundY - 6 * obs.z, width * 0.96, 6 * obs.z);
+          ctx.fillStyle = '#854d0e';
+          this.drawRoundedRect(ctx, cx - width * 0.48, groundY - 6.5 * obs.z, width * 0.96, 6.5 * obs.z, 3);
           ctx.fill();
 
-          if (obs.z > 0.35) {
+          if (obs.z > 0.32) {
             ctx.fillStyle = '#fef08a';
-            ctx.font = `bold ${Math.floor(10 * obs.z)}px system-ui, sans-serif`;
+            ctx.font = `bold ${Math.floor(10.5 * obs.z)}px "Outfit", "Plus Jakarta Sans", system-ui, sans-serif`;
             ctx.textAlign = 'center';
-            ctx.fillText('▲ JUMP ▲', cx, groundY - hurdleH - 8);
+            ctx.fillText('▲ LEAP ▲', cx, groundY - hurdleH - 9);
           }
           break;
         }
 
         case ObstacleType.TALL_BLOCK: {
-          // Lifeguard Tower Barricade & Colorful Vintage Surfboards (Must switch lane)
-          const blockH = Math.max(18, 80 * obs.z);
+          // Lifeguard Rescue Stand & Vintage Surfboards (Must switch lane)
+          const blockH = Math.max(18, 82 * obs.z);
 
-          // Lifeguard station booth (warm coastal wood & white trim)
+          // Elevated Lifeguard observation tower (Santa Monica white clapboard with Pacific blue trim)
           ctx.fillStyle = '#f8fafc';
+          this.drawRoundedRect(ctx, cx - width * 0.44, groundY - blockH, width * 0.88, blockH, 4);
+          ctx.fill();
+
           ctx.strokeStyle = '#0284c7';
           ctx.lineWidth = Math.max(1.5, 3 * obs.z);
-          ctx.fillRect(cx - width * 0.45, groundY - blockH, width * 0.9, blockH);
-          ctx.strokeRect(cx - width * 0.45, groundY - blockH, width * 0.9, blockH);
+          this.drawRoundedRect(ctx, cx - width * 0.44, groundY - blockH, width * 0.88, blockH, 4);
+          ctx.stroke();
 
-          // Red Lifeguard Cross / Rescue Buoy
-          const crossSize = Math.max(4, 14 * obs.z);
-          const crossY = groundY - blockH * 0.65;
+          // Lifeguard tower window with sky reflection
+          const winW = width * 0.5;
+          const winH = blockH * 0.28;
+          ctx.fillStyle = '#38bdf8';
+          this.drawRoundedRect(ctx, cx - winW * 0.5, groundY - blockH * 0.88, winW, winH, 2);
+          ctx.fill();
+
+          // Red Lifeguard Cross
+          const crossSize = Math.max(4, 15 * obs.z);
+          const crossY = groundY - blockH * 0.42;
           ctx.fillStyle = '#ef4444';
           ctx.fillRect(cx - crossSize * 0.5, crossY - crossSize * 0.16, crossSize, crossSize * 0.32);
           ctx.fillRect(cx - crossSize * 0.16, crossY - crossSize * 0.5, crossSize * 0.32, crossSize);
 
-          // Leaning colorful retro surfboards against barricade
-          const boardW = Math.max(3, 8 * obs.z);
-          const boardH = blockH * 0.75;
-          // Left surfboard (Teal)
-          ctx.fillStyle = '#06b6d4';
-          ctx.beginPath();
-          ctx.ellipse(cx - width * 0.25, groundY - boardH * 0.5, boardW, boardH * 0.5, -0.15, 0, Math.PI * 2);
-          ctx.fill();
-          // Right surfboard (Coral/Yellow)
+          // Orange rescue can / torpedo buoy hanging on right side
           ctx.fillStyle = '#f97316';
-          ctx.beginPath();
-          ctx.ellipse(cx + width * 0.25, groundY - boardH * 0.5, boardW, boardH * 0.5, 0.15, 0, Math.PI * 2);
+          this.drawRoundedRect(ctx, cx + width * 0.32, groundY - blockH * 0.65, Math.max(3, 7 * obs.z), Math.max(6, 16 * obs.z), 2);
           ctx.fill();
 
-          if (obs.z > 0.35) {
+          // Leaning colorful retro surfboards against the tower
+          const boardW = Math.max(3, 8 * obs.z);
+          const boardH = blockH * 0.72;
+
+          // Left surfboard (Pacific Teal with gold stripe)
+          ctx.fillStyle = '#0d9488';
+          ctx.beginPath();
+          ctx.ellipse(cx - width * 0.26, groundY - boardH * 0.5, boardW, boardH * 0.5, -0.16, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Right surfboard (California Coral)
+          ctx.fillStyle = '#f97316';
+          ctx.beginPath();
+          ctx.ellipse(cx + width * 0.22, groundY - boardH * 0.48, boardW, boardH * 0.48, 0.16, 0, Math.PI * 2);
+          ctx.fill();
+
+          if (obs.z > 0.32) {
             ctx.fillStyle = '#0369a1';
-            ctx.font = `bold ${Math.floor(11 * obs.z)}px system-ui, sans-serif`;
+            ctx.font = `bold ${Math.floor(11 * obs.z)}px "Outfit", "Plus Jakarta Sans", system-ui, sans-serif`;
             ctx.textAlign = 'center';
-            ctx.fillText('CARVE ◀▶', cx, groundY - blockH - 7);
+            ctx.fillText('CARVE ◀▶', cx, groundY - blockH - 8);
           }
           break;
         }
@@ -1557,10 +1754,10 @@ export class RunnerGame {
 
     ctx.save();
 
-    // 1. Natural soft ground shadow below longboard (scales down & softens when jumping)
+    // 1. Natural Soft Ground Shadow Below Board (Scales and softens gracefully when jumping)
     const shadowScale = 1.0 - Math.min(0.65, this.state.jumpY * 0.6);
     const shadowWidth = (w * 0.13) * shadowScale;
-    ctx.fillStyle = `rgba(30, 20, 10, ${0.45 * shadowScale})`;
+    ctx.fillStyle = `rgba(35, 20, 10, ${0.45 * shadowScale})`;
     ctx.beginPath();
     ctx.ellipse(px, groundY, shadowWidth * 0.6, 7 * shadowScale, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -1574,43 +1771,52 @@ export class RunnerGame {
       ctx.rotate(bankAngle);
     }
 
-    // 3. Natural ocean water spray & wave foam droplets trailing behind the board
+    // 3. Natural Ocean Water Spray & Wave Foam Droplets Trailing Behind the Tail
     this.drawWaterSpray(ctx, now);
 
-    // 4. Retro California Longboard Surfboard:
-    // Natural wood-grain finish with clean coastal stripes (teal & coral)
+    // 4. Handcrafted Retro California Longboard:
+    // Natural wood-grain deck, mahogany stringer, coastal dual stripes, black wax pad
     const boardWidth = w * 0.098;
-    const boardHeight = 10;
+    const boardHeight = 11;
 
-    // Outer longboard hull (natural warm wood grain)
-    ctx.fillStyle = '#b47e43'; // Teak/oak wood finish
-    ctx.strokeStyle = '#78350f';
+    // Outer longboard hull (warm teak/balsa wood finish)
+    const woodGrad = ctx.createLinearGradient(-boardWidth * 0.5, 0, boardWidth * 0.5, 0);
+    woodGrad.addColorStop(0, '#a16834');
+    woodGrad.addColorStop(0.5, '#cda06a'); // Golden balsa center
+    woodGrad.addColorStop(1, '#a16834');
+    ctx.fillStyle = woodGrad;
+    ctx.strokeStyle = '#5c320d';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.ellipse(0, 0, boardWidth * 0.5, boardHeight * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
-    // Natural wood stringer line down the center
-    ctx.strokeStyle = '#5c320d';
-    ctx.lineWidth = 1.2;
+    // Classic dark mahogany / koa stringer line down center
+    ctx.strokeStyle = '#3d1d06';
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.moveTo(-boardWidth * 0.45, 0);
-    ctx.lineTo(boardWidth * 0.45, 0);
+    ctx.moveTo(-boardWidth * 0.46, 0);
+    ctx.lineTo(boardWidth * 0.46, 0);
     ctx.stroke();
 
-    // Clean coastal stripes (Teal & Coral)
-    ctx.fillStyle = '#06b6d4'; // Pacific teal
-    ctx.fillRect(-boardWidth * 0.18, -3, boardWidth * 0.12, 6);
-    ctx.fillStyle = '#f97316'; // California coral
-    ctx.fillRect(boardWidth * 0.06, -3, boardWidth * 0.12, 6);
+    // Clean coastal dual racing stripes (Pacific Teal & California Coral)
+    ctx.fillStyle = '#0d9488'; // Pacific teal
+    ctx.fillRect(-boardWidth * 0.20, -3.5, boardWidth * 0.12, 7);
+    ctx.fillStyle = '#fb7185'; // Soft coral
+    ctx.fillRect(boardWidth * 0.08, -3.5, boardWidth * 0.12, 7);
+
+    // Black surf wax traction deck pad on tail
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+    this.drawRoundedRect(ctx, -boardWidth * 0.38, -3, boardWidth * 0.14, 6, 2);
+    ctx.fill();
 
     // 5. Surfer Avatar (Kinematics: relaxed surf stance, low aerodynamic surf tuck when ducking)
     const isDucking = this.state.isDucking;
     const bodyHeight = isDucking ? 24 : 52;
 
-    // Surfer body & boardshorts / rashguard (Teal & white)
-    ctx.fillStyle = '#0284c7'; // Pacific blue rashguard
+    // Surfer body & Pacific blue rashguard with clean side panels
+    ctx.fillStyle = '#0284c7'; // Pacific blue
     ctx.beginPath();
     ctx.moveTo(-10, -5);
     ctx.lineTo(10, -5);
@@ -1619,6 +1825,16 @@ export class RunnerGame {
     ctx.closePath();
     ctx.fill();
 
+    // White rashguard side racing accents
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-9, -5);
+    ctx.lineTo(-6.5, -5 - bodyHeight * 0.65);
+    ctx.moveTo(9, -5);
+    ctx.lineTo(6.5, -5 - bodyHeight * 0.65);
+    ctx.stroke();
+
     // Surfer head & sun-bleached hair
     const headY = -5 - bodyHeight;
     ctx.fillStyle = '#fed7aa'; // Sun-kissed skin tone
@@ -1626,46 +1842,51 @@ export class RunnerGame {
     ctx.arc(0, headY + 8, 7.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Sun-bleached blonde surf hair
+    // Sun-bleached blonde surf hair with coastal wind sway
+    const hairSway = Math.sin(now * 0.008) * 1.5;
     ctx.fillStyle = '#fef08a';
     ctx.beginPath();
-    ctx.arc(0, headY + 4, 7, Math.PI, Math.PI * 2);
+    ctx.arc(0 + hairSway, headY + 4, 7.2, Math.PI, Math.PI * 2);
     ctx.fill();
 
-    // Surfer sunglasses
+    // Sleek surf sunglasses
     ctx.fillStyle = '#0f172a';
-    ctx.fillRect(-5, headY + 6, 10, 3);
+    ctx.fillRect(-5, headY + 6.5, 10, 3);
 
-    // 6. Super-Surf Mode (Hoverboard Shield): Radiant golden sun & ocean water aura
+    // 6. Super-Surf Wave Shield (Hoverboard Shield): Radiant golden sun & ocean water aura
     if (this.state.isHoverboardActive) {
-      const shieldRadius = Math.max(34, w * 0.085);
-      const pulse = 1.0 + Math.sin(now * 0.007) * 0.07;
+      const shieldRadius = Math.max(36, w * 0.088);
+      const pulse = 1.0 + Math.sin(now * 0.007) * 0.08;
       const curRadius = shieldRadius * pulse;
 
       ctx.save();
       // Soft radiant golden sun aura
       const auraGrad = ctx.createRadialGradient(0, -20, 5, 0, -20, curRadius);
-      auraGrad.addColorStop(0, 'rgba(254, 240, 138, 0.4)');
-      auraGrad.addColorStop(0.6, 'rgba(56, 189, 248, 0.3)');
+      auraGrad.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
+      auraGrad.addColorStop(0.6, 'rgba(56, 189, 248, 0.32)');
       auraGrad.addColorStop(1, 'rgba(254, 215, 170, 0)');
       ctx.fillStyle = auraGrad;
       ctx.beginPath();
       ctx.arc(0, -20, curRadius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Glistening ocean water ring with droplets
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 2;
+      // Shimmering sea-glass turquoise ring
+      ctx.strokeStyle = '#14b8a6';
+      ctx.lineWidth = 2.2;
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 10;
       ctx.beginPath();
       ctx.arc(0, -20, curRadius * 0.88, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Glistening droplets orbiting
+      // Glistening water droplets orbiting
       for (let d = 0; d < 6; d++) {
         const da = now * 0.003 + (d * Math.PI) / 3;
         const dx = Math.cos(da) * curRadius * 0.88;
         const dy = -20 + Math.sin(da) * curRadius * 0.88;
         ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 6;
         ctx.beginPath();
         ctx.arc(dx, dy, 2.5, 0, Math.PI * 2);
         ctx.fill();
@@ -1678,21 +1899,21 @@ export class RunnerGame {
 
   private drawWaterSpray(ctx: CanvasRenderingContext2D, now: number): void {
     ctx.save();
-    // Dual ocean wave foam spray trailing behind the longboard tail
-    for (let s = 0; s < 8; s++) {
-      const t = (now * 0.006 + s * 0.4) % 1.0;
-      const sprayY = 6 + t * 24;
-      const spread = 8 + t * 26;
-      const alpha = (1.0 - t) * 0.7;
+    // Realistic foaming sea spray trails fanning out from the longboard tail
+    for (let s = 0; s < 9; s++) {
+      const t = (now * 0.006 + s * 0.36) % 1.0;
+      const sprayY = 6 + t * 26;
+      const spread = 9 + t * 28;
+      const alpha = (1.0 - t) * 0.72;
 
       ctx.fillStyle = `rgba(240, 253, 250, ${alpha})`;
       // Left spray droplet
       ctx.beginPath();
-      ctx.arc(-spread, sprayY, 2 + t * 2, 0, Math.PI * 2);
+      ctx.arc(-spread, sprayY, 2 + t * 2.2, 0, Math.PI * 2);
       ctx.fill();
       // Right spray droplet
       ctx.beginPath();
-      ctx.arc(spread, sprayY, 2 + t * 2, 0, Math.PI * 2);
+      ctx.arc(spread, sprayY, 2 + t * 2.2, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
@@ -1741,9 +1962,9 @@ export class RunnerGame {
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.fillStyle = ft.color;
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-      ctx.shadowBlur = 6;
-      ctx.font = `bold ${Math.floor(ft.fontSize * popScale)}px system-ui, sans-serif`;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+      ctx.shadowBlur = 8;
+      ctx.font = `bold ${Math.floor(ft.fontSize * popScale)}px "Outfit", "Plus Jakarta Sans", system-ui, sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText(ft.text, px + ft.x, py + ft.y);
       ctx.restore();
@@ -1754,32 +1975,38 @@ export class RunnerGame {
   private drawHUD(ctx: CanvasRenderingContext2D, w: number): void {
     ctx.save();
 
-    // Frosted Sea-Glass Top Header Bar
+    // Floating Frosted Sea-Glass Top Header Bar
     const hudW = w - 32;
     const hudH = 50;
     const hudX = 16;
     const hudY = 12;
 
-    ctx.fillStyle = 'rgba(11, 23, 40, 0.85)';
-    ctx.fillRect(hudX, hudY, hudW, hudH);
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(hudX, hudY, hudW, hudH);
+    ctx.fillStyle = 'rgba(8, 19, 37, 0.88)';
+    this.drawRoundedRect(ctx, hudX, hudY, hudW, hudH, 12);
+    ctx.fill();
 
-    // Dynamic Spacing Calculation
-    ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)';
+    ctx.lineWidth = 1.4;
+    ctx.shadowColor = 'rgba(56, 189, 248, 0.2)';
+    ctx.shadowBlur = 10;
+    this.drawRoundedRect(ctx, hudX, hudY, hudW, hudH, 12);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Dynamic Spacing Calculation with modern typography
+    ctx.font = 'bold 18px "Outfit", "Plus Jakarta Sans", system-ui, sans-serif';
     const scoreText = `SCORE: ${Math.floor(this.state.score)}`;
     const scoreWidth = ctx.measureText ? ctx.measureText(scoreText).width : 100;
-    const scoreX = hudX + 16;
+    const scoreX = hudX + 18;
 
     // Score display
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#f8fafc';
     ctx.textAlign = 'left';
     ctx.fillText(scoreText, scoreX, hudY + 31);
 
     // Starfish collectibles (dynamically placed past score)
     const starfishText = `★ STARFISH: ${this.state.coins}`;
-    const starfishWidth = ctx.measureText ? ctx.measureText(starfishText).width : 115;
+    const starfishWidth = ctx.measureText ? ctx.measureText(starfishText).width : 120;
     const starfishX = scoreX + scoreWidth + 24;
 
     ctx.fillStyle = '#fbbf24';
@@ -1787,25 +2014,30 @@ export class RunnerGame {
 
     // Speed multiplier pill badge (anchored on right)
     const speedText = `${this.speedMultiplier.toFixed(1)}x CRUISE`;
-    const pillW = 95;
-    const pillH = 24;
-    const pillX = hudX + hudW - pillW - 12;
-    const pillY = hudY + 13;
-    ctx.fillStyle = 'rgba(14, 27, 45, 0.7)';
-    ctx.fillRect(pillX, pillY, pillW, pillH);
+    const pillW = 98;
+    const pillH = 26;
+    const pillX = hudX + hudW - pillW - 14;
+    const pillY = hudY + 12;
+
+    ctx.fillStyle = 'rgba(14, 28, 48, 0.8)';
+    this.drawRoundedRect(ctx, pillX, pillY, pillW, pillH, 8);
+    ctx.fill();
+
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 1.2;
-    ctx.strokeRect(pillX, pillY, pillW, pillH);
+    this.drawRoundedRect(ctx, pillX, pillY, pillW, pillH, 8);
+    ctx.stroke();
+
     ctx.fillStyle = '#7dd3fc';
-    ctx.font = 'bold 11px system-ui, sans-serif';
+    ctx.font = 'bold 11px "Outfit", "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(speedText, pillX + pillW / 2, pillY + 16);
+    ctx.fillText(speedText, pillX + pillW / 2, pillY + 17);
 
     // High score (anchored left of speed pill)
-    ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+    ctx.font = 'bold 18px "Outfit", "Plus Jakarta Sans", system-ui, sans-serif';
     const bestText = `BEST: ${this.state.highScore}`;
     const bestWidth = ctx.measureText ? ctx.measureText(bestText).width : 85;
-    const bestX = pillX - 16;
+    const bestX = pillX - 18;
 
     ctx.fillStyle = '#fed7aa';
     ctx.textAlign = 'right';
@@ -1818,17 +2050,20 @@ export class RunnerGame {
 
     // Dynamic Swell Streak Pill Badge
     if (this.state.combo > 1 && !this.state.isHoverboardActive && centerAvailable > 70) {
-      const comboW = Math.min(105, centerAvailable);
-      const comboH = 26;
+      const comboW = Math.min(110, centerAvailable);
+      const comboH = 28;
       const comboX = centerStart + (centerAvailable - comboW) / 2;
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.2)';
-      ctx.fillRect(comboX, hudY + 12, comboW, comboH);
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.22)';
+      this.drawRoundedRect(ctx, comboX, hudY + 11, comboW, comboH, 8);
+      ctx.fill();
+
       ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(comboX, hudY + 12, comboW, comboH);
+      ctx.lineWidth = 1.4;
+      this.drawRoundedRect(ctx, comboX, hudY + 11, comboW, comboH, 8);
+      ctx.stroke();
 
       ctx.fillStyle = '#fef08a';
-      ctx.font = 'bold 12px system-ui, sans-serif';
+      ctx.font = 'bold 12px "Outfit", "Plus Jakarta Sans", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(`SWELL x${this.state.combo}!`, comboX + comboW / 2, hudY + 29);
     }
@@ -1836,17 +2071,23 @@ export class RunnerGame {
     // Super-Surf Wave Shield status bar
     if (this.state.isHoverboardActive) {
       const remainingPct = this.state.hoverboardRemainingSec / this.state.HOVERBOARD_DURATION;
-      const barW = Math.min(140, Math.max(80, centerAvailable > 80 ? centerAvailable : 140));
+      const barW = Math.min(145, Math.max(80, centerAvailable > 80 ? centerAvailable : 145));
       const barX = centerAvailable > 80 ? centerStart + (centerAvailable - barW) / 2 : w / 2 - barW / 2;
-      ctx.fillStyle = 'rgba(9, 19, 33, 0.7)';
-      ctx.fillRect(barX, hudY + 14, barW, 22);
-      ctx.fillStyle = '#38bdf8';
-      ctx.fillRect(barX + 2, hudY + 16, Math.max(0, (barW - 4) * remainingPct), 18);
-      ctx.strokeStyle = '#fbbf24';
-      ctx.strokeRect(barX, hudY + 14, barW, 22);
+      ctx.fillStyle = 'rgba(8, 19, 37, 0.85)';
+      this.drawRoundedRect(ctx, barX, hudY + 13, barW, 24, 6);
+      ctx.fill();
 
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 11px system-ui, sans-serif';
+      ctx.fillStyle = '#0284c7';
+      this.drawRoundedRect(ctx, barX + 2, hudY + 15, Math.max(0, (barW - 4) * remainingPct), 20, 4);
+      ctx.fill();
+
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1.2;
+      this.drawRoundedRect(ctx, barX, hudY + 13, barW, 24, 6);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px "Outfit", "Plus Jakarta Sans", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('SUPER-SURF ACTIVE', barX + barW / 2, hudY + 29);
     }
@@ -1861,7 +2102,7 @@ export class RunnerGame {
   ): void {
     ctx.save();
     // Frosted dark coastal backdrop
-    ctx.fillStyle = 'rgba(11, 21, 35, 0.86)';
+    ctx.fillStyle = 'rgba(6, 14, 26, 0.88)';
     ctx.fillRect(0, 0, w, h);
 
     // Sea-Glass Card in center
@@ -1870,40 +2111,81 @@ export class RunnerGame {
     const cardX = w * 0.5 - cardW * 0.5;
     const cardY = h * 0.5 - cardH * 0.5;
 
-    ctx.fillStyle = 'rgba(14, 27, 45, 0.95)';
-    ctx.fillRect(cardX, cardY, cardW, cardH);
-    ctx.strokeStyle = this.state.isNewHighScore ? '#fbbf24' : '#f97316';
-    ctx.lineWidth = 2.5;
-    ctx.strokeRect(cardX, cardY, cardW, cardH);
+    ctx.fillStyle = 'rgba(10, 22, 38, 0.96)';
+    this.drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 18);
+    ctx.fill();
+
+    const isRecord = this.state.isNewHighScore;
+    ctx.strokeStyle = isRecord ? '#fbbf24' : '#f59e0b';
+    ctx.lineWidth = 2.2;
+    ctx.shadowColor = isRecord ? 'rgba(251, 191, 36, 0.5)' : 'rgba(245, 158, 11, 0.35)';
+    ctx.shadowBlur = 16;
+    this.drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 18);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
 
     // Header Title
     ctx.textAlign = 'center';
-    if (this.state.isNewHighScore) {
+    if (isRecord) {
       ctx.fillStyle = '#fbbf24';
-      ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
-      ctx.fillText('🏆 NEW BEACH RECORD! 🏆', w / 2, cardY + 50);
+      ctx.font = 'bold 28px "Outfit", "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText('🏆 NEW BEACH RECORD! 🏆', w / 2, cardY + 54);
     } else {
       ctx.fillStyle = '#f97316';
-      ctx.font = 'bold 30px system-ui, -apple-system, sans-serif';
-      ctx.fillText('WIPEOUT - RUN SUMMARY', w / 2, cardY + 50);
+      ctx.font = 'bold 28px "Outfit", "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillText('SUNSET RUN SUMMARY', w / 2, cardY + 54);
     }
 
-    // Run Summary Grid
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = '17px system-ui, -apple-system, sans-serif';
-    ctx.fillText(`FINAL SCORE: ${Math.floor(this.state.score)}`, w / 2, cardY + 105);
-    ctx.fillText(`STARFISH COLLECTED: ${this.state.coins}`, w / 2, cardY + 145);
-    ctx.fillText(`MAX SWELL STREAK: x${this.state.maxCombo}`, w / 2, cardY + 185);
-    ctx.fillText(`OBSTACLES CLEARED: ${this.state.obstaclesCleared}`, w / 2, cardY + 225);
-    ctx.fillText(`LEAPS / TUCKS: ${this.state.jumpsPerformed} / ${this.state.ducksPerformed}`, w / 2, cardY + 265);
+    // Divider
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cardX + 28, cardY + 76);
+    ctx.lineTo(cardX + cardW - 28, cardY + 76);
+    ctx.stroke();
 
-    // Replay Prompt
-    const pulse = Math.sin(performance.now() * 0.007) * 0.25 + 0.75;
+    // Run Summary Grid with refined coastal typography
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '600 16px "Outfit", "Plus Jakarta Sans", system-ui, sans-serif';
+    ctx.fillText(`FINAL SCORE: ${Math.floor(this.state.score)}`, w / 2, cardY + 115);
+    ctx.fillText(`STARFISH COLLECTED: ${this.state.coins}`, w / 2, cardY + 155);
+    ctx.fillText(`MAX SWELL STREAK: x${this.state.maxCombo}`, w / 2, cardY + 195);
+    ctx.fillText(`OBSTACLES CLEARED: ${this.state.obstaclesCleared}`, w / 2, cardY + 235);
+    ctx.fillText(`LEAPS / TUCKS: ${this.state.jumpsPerformed} / ${this.state.ducksPerformed}`, w / 2, cardY + 275);
+
+    // Replay Prompt with smooth breathing pulse
+    const pulse = Math.sin(performance.now() * 0.006) * 0.25 + 0.75;
     ctx.fillStyle = `rgba(56, 189, 248, ${pulse})`;
-    ctx.font = 'bold 15px system-ui, -apple-system, sans-serif';
-    ctx.fillText('PRESS SPACE OR JUMP TO CATCH THE NEXT WAVE', w / 2, cardY + cardH - 35);
+    ctx.font = 'bold 15px "Outfit", "Plus Jakarta Sans", system-ui, sans-serif';
+    ctx.fillText('PRESS SPACE OR JUMP TO CATCH THE NEXT WAVE', w / 2, cardY + cardH - 36);
 
     ctx.restore();
+  }
+
+  private drawRoundedRect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radius: number,
+  ): void {
+    if (typeof ctx.roundRect === 'function') {
+      ctx.beginPath();
+      ctx.roundRect(x, y, width, height, radius);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
   }
 }
 

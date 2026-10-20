@@ -1,7 +1,7 @@
 /**
  * Camera HUD and Pose Skeleton Overlay.
  * Visualizes real-time body tracking, calibration status, and detected gestures
- * with relaxed California coastal aesthetics, warm ocean sea-glass panels,
+ * with California coastal aesthetics, sea-glass panels,
  * and high-contrast ergonomic skeleton rendering.
  */
 
@@ -71,15 +71,18 @@ export class CameraHUD {
       ctx.restore();
     } else {
       // Placeholder oceanic backdrop
-      ctx.fillStyle = '#091321';
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+      bgGrad.addColorStop(0, '#060e1a');
+      bgGrad.addColorStop(1, '#0c1c30');
+      ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, w, h);
     }
 
-    // Semi-transparent deep coastal tint for high contrast
-    ctx.fillStyle = 'rgba(9, 19, 33, 0.45)';
+    // Semi-transparent deep coastal tint for high contrast and calm visual tone
+    ctx.fillStyle = 'rgba(6, 14, 26, 0.48)';
     ctx.fillRect(0, 0, w, h);
 
-    // Coastal corner reticle brackets
+    // Coastal corner reticle brackets with precision ticks
     this.drawReticleBrackets(ctx, w, h);
 
     // 2. Draw Skeleton if landmarks available
@@ -102,19 +105,31 @@ export class CameraHUD {
     // 5. Draw Gesture Banner Notification with smooth fadeout
     if (this.bannerAlpha > 0.01) {
       ctx.save();
-      ctx.globalAlpha = this.bannerAlpha;
-      ctx.fillStyle = 'rgba(11, 23, 40, 0.9)';
-      ctx.fillRect(16, h - 56, w - 32, 44);
+      ctx.globalAlpha = Math.min(1.0, this.bannerAlpha);
+
+      const bannerW = Math.min(w - 32, 420);
+      const bannerH = 46;
+      const bannerX = (w - bannerW) / 2;
+      const bannerY = h - 60;
+
+      // Sea-glass card
+      ctx.fillStyle = 'rgba(8, 19, 37, 0.92)';
+      this.drawRoundedRect(ctx, bannerX, bannerY, bannerW, bannerH, 12);
+      ctx.fill();
+
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 1.5;
       ctx.shadowColor = 'rgba(56, 189, 248, 0.4)';
-      ctx.shadowBlur = 10;
-      ctx.strokeRect(16, h - 56, w - 32, 44);
+      ctx.shadowBlur = 12;
+      this.drawRoundedRect(ctx, bannerX, bannerY, bannerW, bannerH, 12);
+      ctx.stroke();
 
       ctx.fillStyle = '#fef08a';
-      ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
+      ctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+      ctx.shadowBlur = 6;
+      ctx.font = 'bold 16px "Outfit", "Plus Jakarta Sans", system-ui, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(this.lastBannerText, w / 2, h - 28);
+      ctx.fillText(this.lastBannerText, w / 2, bannerY + 28);
       ctx.restore();
 
       this.bannerAlpha = Math.max(0, this.bannerAlpha - dt * 1.6);
@@ -127,37 +142,48 @@ export class CameraHUD {
     h: number,
   ): void {
     ctx.save();
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
     ctx.lineWidth = 2;
-    const bracketLen = 20;
+    const bracketLen = 22;
+    const inset = 14;
 
     // Top-Left
     ctx.beginPath();
-    ctx.moveTo(12, 12 + bracketLen);
-    ctx.lineTo(12, 12);
-    ctx.lineTo(12 + bracketLen, 12);
+    ctx.moveTo(inset, inset + bracketLen);
+    ctx.lineTo(inset, inset);
+    ctx.lineTo(inset + bracketLen, inset);
     ctx.stroke();
 
     // Top-Right
     ctx.beginPath();
-    ctx.moveTo(w - 12 - bracketLen, 12);
-    ctx.lineTo(w - 12, 12);
-    ctx.lineTo(w - 12, 12 + bracketLen);
+    ctx.moveTo(w - inset - bracketLen, inset);
+    ctx.lineTo(w - inset, inset);
+    ctx.lineTo(w - inset, inset + bracketLen);
     ctx.stroke();
 
     // Bottom-Left
     ctx.beginPath();
-    ctx.moveTo(12, h - 12 - bracketLen);
-    ctx.lineTo(12, h - 12);
-    ctx.lineTo(12 + bracketLen, h - 12);
+    ctx.moveTo(inset, h - inset - bracketLen);
+    ctx.lineTo(inset, h - inset);
+    ctx.lineTo(inset + bracketLen, h - inset);
     ctx.stroke();
 
     // Bottom-Right
     ctx.beginPath();
-    ctx.moveTo(w - 12 - bracketLen, h - 12);
-    ctx.lineTo(w - 12, h - 12);
-    ctx.lineTo(w - 12, h - 12 - bracketLen);
+    ctx.moveTo(w - inset - bracketLen, h - inset);
+    ctx.lineTo(w - inset, h - inset);
+    ctx.lineTo(w - inset, h - inset - bracketLen);
     ctx.stroke();
+
+    // Subtle corner accent dots
+    ctx.fillStyle = '#14b8a6';
+    const dotDist = inset + 4;
+    ctx.beginPath();
+    ctx.arc(dotDist, dotDist, 2, 0, Math.PI * 2);
+    ctx.arc(w - dotDist, dotDist, 2, 0, Math.PI * 2);
+    ctx.arc(dotDist, h - dotDist, 2, 0, Math.PI * 2);
+    ctx.arc(w - dotDist, h - dotDist, 2, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
   }
@@ -178,21 +204,22 @@ export class CameraHUD {
     };
 
     const connections: [number, number][] = [
-      [11, 12],
-      [12, 24],
-      [24, 23],
-      [23, 11],
-      [11, 13],
-      [13, 15],
-      [12, 14],
-      [14, 16],
+      [11, 12], // Shoulders
+      [12, 24], // Right torso
+      [24, 23], // Hips
+      [23, 11], // Left torso
+      [11, 13], // Left upper arm
+      [13, 15], // Left forearm
+      [12, 14], // Right upper arm
+      [14, 16], // Right forearm
     ];
 
     ctx.save();
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 3.5;
-    ctx.shadowColor = 'rgba(56, 189, 248, 0.5)';
-    ctx.shadowBlur = 8;
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 4;
+    ctx.shadowColor = 'rgba(56, 189, 248, 0.6)';
+    ctx.shadowBlur = 10;
+    ctx.lineCap = 'round';
 
     for (const [i, j] of connections) {
       const p1 = getCoords(i);
@@ -205,24 +232,65 @@ export class CameraHUD {
       }
     }
 
+    // Inner bright bone highlight
+    ctx.strokeStyle = '#7dd3fc';
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 0;
+    for (const [i, j] of connections) {
+      const p1 = getCoords(i);
+      const p2 = getCoords(j);
+      if (p1 && p2) {
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+    }
+
     // Key joint points with warm coastal accents
-    const keyJoints = [11, 12, 23, 24, 15, 16];
+    const keyJoints = [11, 12, 23, 24, 13, 14, 15, 16];
     for (const j of keyJoints) {
       const p = getCoords(j);
       if (p) {
         const isWrist = j === 15 || j === 16;
-        ctx.fillStyle = isWrist ? '#fbbf24' : '#fb7185';
-        ctx.shadowColor = ctx.fillStyle;
-        ctx.shadowBlur = 8;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, isWrist ? 7 : 5, 0, Math.PI * 2);
-        ctx.fill();
+        const isElbow = j === 13 || j === 14;
 
         if (isWrist) {
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 1.5;
+          // Luminous golden wrists (Gesture triggers)
+          ctx.fillStyle = '#fbbf24';
+          ctx.shadowColor = 'rgba(245, 158, 11, 0.8)';
+          ctx.shadowBlur = 12;
           ctx.beginPath();
-          ctx.arc(p.x, p.y, 11, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, 7.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Concentric outer ring
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 12, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (isElbow) {
+          // Seafoam elbow joints
+          ctx.fillStyle = '#34d399';
+          ctx.shadowColor = 'rgba(52, 211, 153, 0.6)';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 5.5, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Coral shoulder & hip anchors
+          ctx.fillStyle = '#fb7185';
+          ctx.shadowColor = 'rgba(251, 113, 133, 0.6)';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 8.5, 0, Math.PI * 2);
           ctx.stroke();
         }
       }
@@ -240,10 +308,10 @@ export class CameraHUD {
   ): void {
     ctx.save();
 
-    // Top status pill (Sea-glass styling)
+    // Top status pill (Frosted Sea-glass styling)
     const state = detector.state;
     let badgeColor = '#34d399';
-    let text = 'SURFER: ACTIVE';
+    let text = 'SURFER ACTIVE';
 
     if (state === DetectorState.CALIBRATING) {
       if (
@@ -254,80 +322,102 @@ export class CameraHUD {
         text = 'CALIBRATION PAUSED: DISTANCE';
       } else {
         badgeColor = '#fbbf24';
-        text = 'STAND IN READY STANCE - CALIBRATING...';
+        text = 'CALIBRATING READY STANCE...';
       }
     } else if (state === DetectorState.PAUSED) {
       badgeColor = '#f87171';
-      text = 'CONTROLLER: PAUSED';
+      text = 'CONTROLLER PAUSED';
     }
 
-    ctx.fillStyle = 'rgba(11, 23, 40, 0.88)';
-    ctx.fillRect(8, 8, w - 16, 38);
-    ctx.strokeStyle = badgeColor;
-    ctx.lineWidth = 1.5;
-    ctx.shadowColor = badgeColor;
-    ctx.shadowBlur = 6;
-    ctx.strokeRect(8, 8, w - 16, 38);
+    const pillX = 10;
+    const pillY = 10;
+    const pillW = w - 20;
+    const pillH = 42;
 
+    // Background card
+    ctx.fillStyle = 'rgba(8, 19, 37, 0.88)';
+    this.drawRoundedRect(ctx, pillX, pillY, pillW, pillH, 10);
+    ctx.fill();
+
+    ctx.strokeStyle = badgeColor;
+    ctx.lineWidth = 1.2;
+    ctx.shadowColor = badgeColor;
+    ctx.shadowBlur = 8;
+    this.drawRoundedRect(ctx, pillX, pillY, pillW, pillH, 10);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Status dot indicator
     ctx.fillStyle = badgeColor;
-    ctx.font = 'bold 11px system-ui, -apple-system, monospace';
+    ctx.beginPath();
+    ctx.arc(pillX + 16, pillY + 18, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Status label
+    ctx.fillStyle = badgeColor;
+    ctx.font = 'bold 11px "Outfit", "Plus Jakarta Sans", system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(text, 16, 26);
+    ctx.fillText(text, pillX + 27, pillY + 22);
 
     // Speed Multiplier pill badge
     const speed = detector.speedMultiplier ?? 1.0;
-    const speedBadgeText = `[${speed.toFixed(1)}x CRUISE]`;
+    const speedBadgeText = `${speed.toFixed(1)}x CRUISE`;
     ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 11px "Outfit", monospace';
     const textMetrics = ctx.measureText(text);
-    ctx.fillText(speedBadgeText, 16 + textMetrics.width + 12, 26);
+    const speedX = pillX + 27 + textMetrics.width + 12;
+    ctx.fillText(speedBadgeText, speedX, pillY + 22);
 
-    // Active lane pill
+    // Active lane indicator (right-aligned)
     if (state === DetectorState.ACTIVE) {
-      let laneText = 'LANE: CENTER (0)';
-      if (detector.currentLane === -1) laneText = 'LANE: LEFT (-1)';
-      if (detector.currentLane === 1) laneText = 'LANE: RIGHT (+1)';
+      let laneText = 'LANE: CENTER';
+      if (detector.currentLane === -1) laneText = 'LANE: LEFT';
+      if (detector.currentLane === 1) laneText = 'LANE: RIGHT';
 
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = '#f8fafc';
       ctx.textAlign = 'right';
-      ctx.fillText(laneText, w - 16, 26);
+      ctx.font = 'bold 11px "Outfit", "Plus Jakarta Sans", sans-serif';
+      ctx.fillText(laneText, pillX + pillW - 14, pillY + 22);
     }
 
-    // Distance Status pill badge in header
+    // Distance Status in center
     const distStatus = detector.lastDistanceStatus;
     let distColor = '#94a3b8';
-    let distText = 'NO SURFER DETECTED';
+    let distText = 'STAND IN FRAME';
     if (distStatus === DistanceStatus.OPTIMAL) {
       distColor = '#34d399';
       distText = 'DISTANCE OPTIMAL';
     } else if (distStatus === DistanceStatus.TOO_CLOSE) {
       distColor = '#f87171';
-      distText = 'STEP BACK - TOO CLOSE';
+      distText = 'STEP BACK';
     } else if (distStatus === DistanceStatus.TOO_FAR) {
       distColor = '#fbbf24';
-      distText = 'STEP CLOSER - TOO FAR';
+      distText = 'STEP CLOSER';
     }
 
     ctx.fillStyle = distColor;
     ctx.textAlign = 'center';
-    ctx.font = 'bold 11px system-ui, -apple-system, monospace';
-    ctx.fillText(distText, w / 2, 22);
+    ctx.font = 'bold 10px "Outfit", "Plus Jakarta Sans", monospace';
+    ctx.fillText(distText, w / 2, pillY + 18);
 
-    // Horizontal shoulder-width meter
-    const meterW = Math.min(110, Math.max(50, w * 0.22));
-    const meterH = 3;
+    // Horizontal precision shoulder-width meter
+    const meterW = Math.min(120, Math.max(60, w * 0.24));
+    const meterH = 4;
     const meterX = (w - meterW) / 2;
-    const meterY = 32;
+    const meterY = pillY + 28;
 
     // Track
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.fillRect(meterX, meterY, meterW, meterH);
+    this.drawRoundedRect(ctx, meterX, meterY, meterW, meterH, 2);
+    ctx.fill();
 
-    // Optimal bracket
+    // Optimal bracket zone
     const rangeMax = 0.60;
     const optX1 = meterX + (detector.config.min_shoulder_width / rangeMax) * meterW;
     const optX2 = meterX + (detector.config.max_shoulder_width / rangeMax) * meterW;
-    ctx.fillStyle = 'rgba(52, 211, 153, 0.45)';
-    ctx.fillRect(optX1, meterY, Math.max(1, optX2 - optX1), meterH);
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.55)';
+    this.drawRoundedRect(ctx, optX1, meterY, Math.max(1, optX2 - optX1), meterH, 2);
+    ctx.fill();
 
     // Current shoulder-width indicator dot
     if (landmarks && landmarks.length > 12) {
@@ -345,18 +435,29 @@ export class CameraHUD {
           : sw > detector.config.max_shoulder_width
             ? '#f87171'
             : '#fbbf24';
-        ctx.fillRect(curX - 1.5, meterY - 1, 3, meterH + 2);
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur = 4;
+        ctx.beginPath();
+        ctx.arc(curX, meterY + meterH / 2, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
       }
     }
 
-    // Calibration Progress Bar
+    // Calibration Progress Bar under pill
     if (state === DetectorState.CALIBRATING) {
       const progress = detector.calibrationProgress;
-      const barW = w - 32;
+      const barW = pillW - 24;
+      const barY = pillY + pillH + 4;
       ctx.fillStyle = 'rgba(251, 191, 36, 0.2)';
-      ctx.fillRect(16, 48, barW, 6);
+      this.drawRoundedRect(ctx, pillX + 12, barY, barW, 5, 2.5);
+      ctx.fill();
       ctx.fillStyle = '#fbbf24';
-      ctx.fillRect(16, 48, barW * progress, 6);
+      ctx.shadowColor = 'rgba(251, 191, 36, 0.5)';
+      ctx.shadowBlur = 6;
+      this.drawRoundedRect(ctx, pillX + 12, barY, Math.max(4, barW * progress), 5, 2.5);
+      ctx.fill();
+      ctx.shadowBlur = 0;
     }
 
     ctx.restore();
@@ -379,30 +480,61 @@ export class CameraHUD {
 
     ctx.save();
     const boxW = Math.min(w - 32, 420);
-    const boxH = 80;
+    const boxH = 82;
     const x = (w - boxW) / 2;
     const y = (h - boxH) / 2;
 
     // Sea-glass card background
-    ctx.fillStyle = 'rgba(11, 22, 38, 0.94)';
-    ctx.fillRect(x, y, boxW, boxH);
+    ctx.fillStyle = 'rgba(8, 19, 37, 0.94)';
+    this.drawRoundedRect(ctx, x, y, boxW, boxH, 14);
+    ctx.fill();
 
-    // Alert border
+    // Alert border with soft glow
     ctx.strokeStyle = alertColor;
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(x, y, boxW, boxH);
+    ctx.shadowColor = alertColor;
+    ctx.shadowBlur = 10;
+    this.drawRoundedRect(ctx, x, y, boxW, boxH, 14);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
 
     // Title
     ctx.fillStyle = alertColor;
-    ctx.font = 'bold 14px system-ui, -apple-system, monospace';
+    ctx.font = 'bold 13px "Outfit", "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(title, w / 2, y + 30);
+    ctx.fillText(title, w / 2, y + 32);
 
     // Instruction
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 12px system-ui, -apple-system, monospace';
-    ctx.fillText(instruction, w / 2, y + 56);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 12px "Outfit", "Plus Jakarta Sans", monospace';
+    ctx.fillText(instruction, w / 2, y + 58);
 
     ctx.restore();
+  }
+
+  private drawRoundedRect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radius: number,
+  ): void {
+    if (typeof ctx.roundRect === 'function') {
+      ctx.beginPath();
+      ctx.roundRect(x, y, width, height, radius);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
   }
 }
