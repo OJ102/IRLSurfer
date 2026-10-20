@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IRLSurfer - Synthwave Vision Runner</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <h1>IRLSurfer</h1>
+        <span class="badge">WEB RUNTIME</span>
+      </div>
+
+      <div class="privacy-notice" title="Privacy Guaranteed">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+        <span>100% on-device vision inference via WebAssembly. No video is ever sent to a server.</span>
+      </div>
+
+      <div class="toolbar">
+        <div class="mode-toggle">
+          <button id="btnModeKeyboard" class="active">Keyboard</button>
+          <button id="btnModeWebcam">Webcam Body Controller</button>
+        </div>
+        <button id="btnPause" class="btn" title="Toggle pause [P]">Pause</button>
+        <button id="btnRecalibrate" class="btn" title="Recalibrate standing baseline [C]">Recalibrate</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+      </section>
+
+      <aside class="sidebar">
+        <div class="camera-card">
+          <div class="camera-header">
+            <span>VISION SKELETON FEED</span>
+            <span id="cameraFps">-- FPS</span>
+          </div>
+          <div class="camera-view-container">
+            <video id="webcamVideo" playsinline autoplay muted width="640" height="480"></video>
+            <canvas id="hudCanvas" width="640" height="480"></canvas>
+            <div id="cameraPrompt" class="camera-overlay-prompt">
+              <p>Play using body gestures via your webcam!</p>
+              <button id="btnEnableCam" class="btn btn-primary">Enable Webcam Controller</button>
+              <p style="font-size: 0.75rem; color: #888;">Or use keyboard Arrow keys / Space anytime.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-card">
+          <h3>🎮 CONTROLS & GESTURES</h3>
+          <div class="gesture-grid">
+            <div class="gesture-item">
+              <div class="action">Step Left / Right</div>
+              <div class="desc">Switch lanes (or ← / → keys)</div>
+            </div>
+            <div class="gesture-item">
+              <div class="action">Vertical Jump</div>
+              <div class="desc">Leap over hurdles (or ↑ / Space)</div>
+            </div>
+            <div class="gesture-item">
+              <div class="action">Crouch / Duck</div>
+              <div class="desc">Duck under high beams (or ↓)</div>
+            </div>
+            <div class="gesture-item">
+              <div class="action">Wrists Together</div>
+              <div class="desc">Hold 0.3s for Shield (or [H] key)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-card" style="font-size: 0.8rem; color: #aaa;">
+          <h3>⚡ PERFORMANCE & PARITY</h3>
+          <p>
+            Deterministic cross-language parity: Uses identical 1€ filtering and Schmitt-trigger
+            state machine as the native Python desktop controller.
+          </p>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      IRLSurfer &bull; Production-Grade Computer Vision Subway Surfers Controller &bull;
+      <a href="https://github.com" target="_blank" rel="noreferrer">Open Source GitHub Repository</a>
+    </footer>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

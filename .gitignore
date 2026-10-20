@@ -58,6 +58,11 @@ Thumbs.db
 models/
 *.tflite
 
+# Node / Web
+node_modules/
+.vite/
+dist/
+
 # Logs and scratch
 *.log
 scratch/

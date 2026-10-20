@@ -1,0 +1,329 @@
+:root {
+  --bg-color: #080612;
+  --panel-bg: #110c22;
+  --neon-cyan: #00ffff;
+  --neon-pink: #ff007f;
+  --neon-yellow: #ffe600;
+  --text-primary: #f0f0ff;
+  --text-muted: #8b87a8;
+  --border-glow: rgba(0, 255, 255, 0.35);
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* Header */
+header {
+  padding: 12px 24px;
+  background: linear-gradient(180deg, #160d2b 0%, rgba(17, 12, 34, 0.8) 100%);
+  border-bottom: 1px solid var(--border-glow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand h1 {
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255, 0, 127, 0.2);
+  border: 1px solid var(--neon-pink);
+  color: var(--neon-pink);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.privacy-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #72f0c0;
+  background: rgba(0, 255, 128, 0.08);
+  border: 1px solid rgba(0, 255, 128, 0.3);
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.privacy-notice svg {
+  flex-shrink: 0;
+}
+
+/* Controls Bar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+button.btn {
+  background: #1c1438;
+  border: 1px solid var(--border-glow);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+button.btn:hover {
+  background: #281c50;
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
+}
+
+button.btn-primary {
+  background: var(--neon-pink);
+  border-color: var(--neon-pink);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+}
+
+button.btn-primary:hover {
+  background: #ff2291;
+  box-shadow: 0 0 20px rgba(255, 0, 127, 0.7);
+}
+
+/* Mode Switch Toggle */
+.mode-toggle {
+  display: flex;
+  background: #0f0a21;
+  border: 1px solid var(--border-glow);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.mode-toggle button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.mode-toggle button.active {
+  background: var(--neon-cyan);
+  color: #090615;
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+}
+
+/* Main Arcade Workspace */
+main {
+  flex: 1;
+  display: flex;
+  padding: 16px;
+  gap: 16px;
+  max-width: 1500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  main {
+    flex-direction: column;
+  }
+}
+
+.game-container {
+  flex: 1.5;
+  display: flex;
+  flex-direction: column;
+  background: #0d081e;
+  border-radius: 10px;
+  border: 1px solid var(--border-glow);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  position: relative;
+  min-height: 540px;
+}
+
+#gameCanvas {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  display: block;
+  object-fit: contain;
+}
+
+/* Side Camera / Tracking Panel */
+.sidebar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 340px;
+  max-width: 460px;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    max-width: 100%;
+  }
+}
+
+.camera-card {
+  background: var(--panel-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border-glow);
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.camera-header {
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(25, 17, 48, 0.7);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.camera-view-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #07050f;
+  overflow: hidden;
+}
+
+#webcamVideo {
+  display: none; /* Video drawn onto HUD canvas */
+}
+
+#hudCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-overlay-prompt {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(10, 8, 20, 0.85);
+  padding: 20px;
+  text-align: center;
+}
+
+.camera-overlay-prompt.hidden {
+  display: none;
+}
+
+.camera-overlay-prompt p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Info Cards */
+.guide-card {
+  background: var(--panel-bg);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 14px;
+  font-size: 0.85rem;
+}
+
+.guide-card h3 {
+  font-size: 0.95rem;
+  color: var(--neon-cyan);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gesture-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.gesture-item {
+  background: #191232;
+  border-radius: 6px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gesture-item .action {
+  font-weight: bold;
+  color: var(--neon-yellow);
+}
+
+.gesture-item .desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Footer */
+footer {
+  padding: 12px 24px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+footer a {
+  color: var(--neon-cyan);
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
