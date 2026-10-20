@@ -1376,68 +1376,35 @@ export class RunnerGame {
     }
     ctx.setLineDash([]);
 
-    // 7. Pier Timber Pilings with Weathered Caps & Nautical Hanging Rope Rails
+    // 7. Clean, Open-Concept Boardwalk Borders (Wide-open to Pacific Ocean)
     for (const laneDiv of [-1.5, 1.5]) {
       const topX = this.getTrackX(laneDiv, 0, w, vanishX);
       const bottomX = this.getTrackX(laneDiv, 1, w, vanishX);
 
-      // Outer border timber curb
-      ctx.strokeStyle = '#4a2810';
-      ctx.lineWidth = 3.8;
+      // Sleek outer timber curb edge
+      ctx.strokeStyle = '#3d1d06';
+      ctx.lineWidth = 4.2;
       ctx.beginPath();
       ctx.moveTo(topX, horizonY);
       ctx.lineTo(bottomX, h);
       ctx.stroke();
 
-      // Pier wooden posts and hanging nautical rope swag
-      const numPosts = 10;
-      const postCoords: Array<{ x: number; y: number; h: number; w: number; z: number }> = [];
+      // Polished teak top-rail highlight
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(topX, horizonY);
+      ctx.lineTo(bottomX, h);
+      ctx.stroke();
 
-      for (let p = 0; p < numPosts; p++) {
-        const postZ = ((p + this._trackOffset * 0.5) % numPosts) / numPosts;
-        if (postZ < 0.08 || postZ > 0.98) continue;
-        const postX = this.getTrackX(laneDiv, postZ, w, vanishX);
-        const postY = this.getTrackY(postZ, h, horizonY);
-        const postH = Math.max(6, 28 * postZ);
-        const postW = Math.max(2.5, 7 * postZ);
-        postCoords.push({ x: postX, y: postY, h: postH, w: postW, z: postZ });
-      }
-
-      // Sort posts by depth
-      postCoords.sort((a, b) => a.z - b.z);
-
-      // Draw nautical hanging rope swag between consecutive pilings
-      ctx.strokeStyle = '#d4a373';
-      for (let k = 0; k < postCoords.length - 1; k++) {
-        const p1 = postCoords[k];
-        const p2 = postCoords[k + 1];
-        if (p2.z - p1.z > 0.3) continue;
-
-        ctx.lineWidth = Math.max(1, 2.4 * p1.z);
-        ctx.beginPath();
-        const topY1 = p1.y - p1.h * 0.75;
-        const topY2 = p2.y - p2.h * 0.75;
-        const midRopeX = (p1.x + p2.x) * 0.5;
-        const midRopeY = (topY1 + topY2) * 0.5 + Math.max(2, 6 * p1.z); // Catenary sag
-        ctx.moveTo(p1.x, topY1);
-        ctx.quadraticCurveTo(midRopeX, midRopeY, p2.x, topY2);
-        ctx.stroke();
-      }
-
-      // Draw timber pilings
-      for (const p of postCoords) {
-        // Timber post
-        ctx.fillStyle = '#5c320d';
-        ctx.fillRect(p.x - p.w * 0.5, p.y - p.h, p.w, p.h);
-
-        // Weathered white painted cap
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(p.x - p.w * 0.5, p.y - p.h, p.w, Math.max(2.2, 6.5 * p.z));
-
-        // Iron piling band
-        ctx.fillStyle = '#291e13';
-        ctx.fillRect(p.x - p.w * 0.5, p.y - p.h * 0.78, p.w, Math.max(1, 2 * p.z));
-      }
+      // Warm coastal sunlit inner bevel line
+      ctx.strokeStyle = 'rgba(254, 243, 199, 0.4)';
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      const bevelOffset = laneDiv < 0 ? 1.5 : -1.5;
+      ctx.moveTo(topX + bevelOffset, horizonY);
+      ctx.lineTo(bottomX + bevelOffset * 1.8, h);
+      ctx.stroke();
     }
 
     ctx.restore();
@@ -1748,173 +1715,521 @@ export class RunnerGame {
     const px = this.getTrackX(this.state.currentLaneX, playerZ, w, vanishX);
     const groundY = this.getTrackY(playerZ, h, horizonY);
 
-    // Jump offset (clean vertical lift)
-    const jumpOffsetPx = this.state.jumpY * (h * 0.3);
-    const py = groundY - jumpOffsetPx;
+    // 1. Hover Float: Levitation oscillation above the boardwalk
+    const hoverY = Math.sin(now * 0.008) * 3.5;
+    const baseHoverPx = 14;
+    const jumpOffsetPx = this.state.jumpY * (h * 0.32);
+    const py = groundY - (baseHoverPx + hoverY + jumpOffsetPx);
 
     ctx.save();
 
-    // 1. Natural Soft Ground Shadow Below Board (Scales and softens gracefully when jumping)
-    const shadowScale = 1.0 - Math.min(0.65, this.state.jumpY * 0.6);
+    // 2. Repulsor Underside Glow & Dynamic Ground Shadow
+    // Contact shadow beneath hoverboard (scales and softens gracefully when jumping)
+    const shadowScale = Math.max(0.32, 1.0 - Math.min(0.65, this.state.jumpY * 0.6));
     const shadowWidth = (w * 0.13) * shadowScale;
-    ctx.fillStyle = `rgba(35, 20, 10, ${0.45 * shadowScale})`;
+    ctx.fillStyle = `rgba(28, 16, 8, ${0.44 * shadowScale})`;
     ctx.beginPath();
-    ctx.ellipse(px, groundY, shadowWidth * 0.6, 7 * shadowScale, 0, 0, Math.PI * 2);
+    ctx.ellipse(px, groundY, shadowWidth * 0.58, 6.5 * shadowScale, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 2. Smooth Banking when carving into turns (like carving a wave)
+    // Dual soft glowing hover thruster discs beneath deck projecting light spots onto ground shadow
+    const thrusterGlowAlpha = (0.42 + Math.sin(now * 0.012) * 0.08 + (this.state.jumpY > 0 ? 0.28 : 0)) * shadowScale;
+    const spotRadius = Math.max(8, 20 * shadowScale);
+    for (const offset of [-shadowWidth * 0.26, shadowWidth * 0.26]) {
+      const spotGrad = ctx.createRadialGradient(px + offset, groundY, 0, px + offset, groundY, spotRadius);
+      spotGrad.addColorStop(0, `rgba(56, 189, 248, ${thrusterGlowAlpha})`);
+      spotGrad.addColorStop(0.5, `rgba(14, 165, 233, ${thrusterGlowAlpha * 0.45})`);
+      spotGrad.addColorStop(1, 'rgba(14, 165, 233, 0)');
+      ctx.fillStyle = spotGrad;
+      ctx.beginPath();
+      ctx.arc(px + offset, groundY, spotRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 3. Smooth Banking when carving into turns & Jump Ollie Pitch
     const laneDiff = this.state.targetLane - this.state.currentLaneX;
-    const bankAngle = laneDiff * 0.35;
+    const bankAngle = laneDiff * 0.32;
+
+    const isJumping = this.state.jumpY > 0.02;
+    const isDucking = this.state.isDucking;
+    // Jump: Hoverboard pitches up slightly in a stylish ollie angle with energetic thruster flare underneath
+    const olliePitch = isJumping
+      ? (this.state.jumpVelocity > 0 ? -0.15 : 0.06) * Math.min(1, this.state.jumpY * 2.5)
+      : 0;
 
     if (ctx.translate && ctx.rotate) {
       ctx.translate(px, py);
-      ctx.rotate(bankAngle);
+      ctx.rotate(bankAngle + olliePitch);
     }
 
-    // 3. Natural Ocean Water Spray & Wave Foam Droplets Trailing Behind the Tail
-    this.drawWaterSpray(ctx, now);
+    const boardWidth = Math.max(68, w * 0.098);
 
-    // 4. Handcrafted Retro California Longboard:
-    // Natural wood-grain deck, mahogany stringer, coastal dual stripes, black wax pad
-    const boardWidth = w * 0.098;
-    const boardHeight = 11;
+    // 4. Dual Hover Propulsion Vapor Trails Streaming from the Tail
+    this.drawHoverboardTrails(ctx, now, isJumping, boardWidth);
 
-    // Outer longboard hull (warm teak/balsa wood finish)
-    const woodGrad = ctx.createLinearGradient(-boardWidth * 0.5, 0, boardWidth * 0.5, 0);
-    woodGrad.addColorStop(0, '#a16834');
-    woodGrad.addColorStop(0.5, '#cda06a'); // Golden balsa center
-    woodGrad.addColorStop(1, '#a16834');
-    ctx.fillStyle = woodGrad;
-    ctx.strokeStyle = '#5c320d';
-    ctx.lineWidth = 1.5;
+    // 5. Underside Hover Thruster Flare Cones (Energetic propulsion beneath deck)
+    const flareLen = (isJumping ? 22 : 9) + Math.sin(now * 0.025) * 3;
+    for (const tx of [-boardWidth * 0.27, boardWidth * 0.23]) {
+      const flareGrad = ctx.createLinearGradient(tx, 4, tx, 4 + flareLen);
+      flareGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+      flareGrad.addColorStop(0.25, 'rgba(56, 189, 248, 0.85)');
+      flareGrad.addColorStop(0.7, 'rgba(14, 165, 233, 0.4)');
+      flareGrad.addColorStop(1, 'rgba(14, 165, 233, 0)');
+      ctx.fillStyle = flareGrad;
+      ctx.beginPath();
+      ctx.moveTo(tx - 6, 4);
+      ctx.lineTo(tx + 6, 4);
+      ctx.lineTo(tx + 1.5, 4 + flareLen);
+      ctx.lineTo(tx - 1.5, 4 + flareLen);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // 6. Sleek Aerodynamic Hoverboard Deck
+    // Raised kicktail on left (-X), contoured nose on right (+X)
+    const kicktailX = -boardWidth * 0.48;
+    const kicktailY = -4.5; // Raised kicktail angle
+    const noseX = boardWidth * 0.48;
+    const noseY = -2.0;     // Contoured aerodynamic nose
+
+    // Aerodynamic composite hull
     ctx.beginPath();
-    ctx.ellipse(0, 0, boardWidth * 0.5, boardHeight * 0.5, 0, 0, Math.PI * 2);
+    ctx.moveTo(kicktailX, kicktailY);
+    ctx.lineTo(-boardWidth * 0.36, 0);
+    ctx.lineTo(boardWidth * 0.36, 0);
+    ctx.lineTo(noseX, noseY);
+    ctx.quadraticCurveTo(noseX + 4, noseY + 4, boardWidth * 0.38, 7);
+    ctx.lineTo(-boardWidth * 0.34, 7);
+    ctx.quadraticCurveTo(kicktailX - 2, kicktailY + 6, kicktailX, kicktailY);
+    ctx.closePath();
+
+    const hullGrad = ctx.createLinearGradient(0, 0, 0, 7);
+    hullGrad.addColorStop(0, '#1e293b');
+    hullGrad.addColorStop(0.5, '#334155');
+    hullGrad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = hullGrad;
     ctx.fill();
+    ctx.strokeStyle = '#090d16';
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    // Classic dark mahogany / koa stringer line down center
-    ctx.strokeStyle = '#3d1d06';
-    ctx.lineWidth = 1.4;
+    // Dual underside hover thruster emitter discs
+    for (const tx of [-boardWidth * 0.27, boardWidth * 0.23]) {
+      // Metallic casing ring
+      ctx.fillStyle = '#64748b';
+      ctx.beginPath();
+      ctx.ellipse(tx, 5.5, 7.5, 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glowing cyan repulsor core
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.ellipse(tx, 5.5, 5, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Bright white plasma emitter center
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.ellipse(tx, 5.5, 2.5, 1, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Matte charcoal grip tape top deck surface
     ctx.beginPath();
-    ctx.moveTo(-boardWidth * 0.46, 0);
-    ctx.lineTo(boardWidth * 0.46, 0);
-    ctx.stroke();
-
-    // Clean coastal dual racing stripes (Pacific Teal & California Coral)
-    ctx.fillStyle = '#0d9488'; // Pacific teal
-    ctx.fillRect(-boardWidth * 0.20, -3.5, boardWidth * 0.12, 7);
-    ctx.fillStyle = '#fb7185'; // Soft coral
-    ctx.fillRect(boardWidth * 0.08, -3.5, boardWidth * 0.12, 7);
-
-    // Black surf wax traction deck pad on tail
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-    this.drawRoundedRect(ctx, -boardWidth * 0.38, -3, boardWidth * 0.14, 6, 2);
+    ctx.moveTo(kicktailX, kicktailY);
+    ctx.quadraticCurveTo(-boardWidth * 0.4, kicktailY * 0.5, -boardWidth * 0.34, 0);
+    ctx.lineTo(boardWidth * 0.36, 0);
+    ctx.quadraticCurveTo(boardWidth * 0.44, noseY * 0.5, noseX, noseY);
+    ctx.lineTo(boardWidth * 0.38, 3);
+    ctx.lineTo(-boardWidth * 0.36, 3);
+    ctx.lineTo(kicktailX, kicktailY + 2.5);
+    ctx.closePath();
+    ctx.fillStyle = '#18181b';
     ctx.fill();
 
-    // 5. Surfer Avatar (Kinematics: relaxed surf stance, low aerodynamic surf tuck when ducking)
-    const isDucking = this.state.isDucking;
-    const bodyHeight = isDucking ? 24 : 52;
-
-    // Surfer body & Pacific blue rashguard with clean side panels
-    ctx.fillStyle = '#0284c7'; // Pacific blue
+    // Subway Surfers style deck graphics (Cyan racing chevron & solar orange accent slash)
+    ctx.fillStyle = '#06b6d4';
     ctx.beginPath();
-    ctx.moveTo(-10, -5);
-    ctx.lineTo(10, -5);
-    ctx.lineTo(7, -5 - bodyHeight * 0.65);
-    ctx.lineTo(-7, -5 - bodyHeight * 0.65);
+    ctx.moveTo(-boardWidth * 0.12, 0);
+    ctx.lineTo(-boardWidth * 0.04, 0);
+    ctx.lineTo(-boardWidth * 0.14, 3);
+    ctx.lineTo(-boardWidth * 0.22, 3);
     ctx.closePath();
     ctx.fill();
 
-    // White rashguard side racing accents
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
+    ctx.fillStyle = '#f97316';
     ctx.beginPath();
-    ctx.moveTo(-9, -5);
-    ctx.lineTo(-6.5, -5 - bodyHeight * 0.65);
-    ctx.moveTo(9, -5);
-    ctx.lineTo(6.5, -5 - bodyHeight * 0.65);
+    ctx.moveTo(boardWidth * 0.06, 0);
+    ctx.lineTo(boardWidth * 0.14, 0);
+    ctx.lineTo(boardWidth * 0.04, 3);
+    ctx.lineTo(-boardWidth * 0.04, 3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Sleek glowing neon side accent trim
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(kicktailX, kicktailY);
+    ctx.lineTo(-boardWidth * 0.36, 0);
+    ctx.lineTo(boardWidth * 0.36, 0);
+    ctx.lineTo(noseX, noseY);
     ctx.stroke();
 
-    // Surfer head & sun-bleached hair
-    const headY = -5 - bodyHeight;
-    ctx.fillStyle = '#fed7aa'; // Sun-kissed skin tone
-    ctx.beginPath();
-    ctx.arc(0, headY + 8, 7.5, 0, Math.PI * 2);
-    ctx.fill();
+    // 7. Subway Surfers Street Skate Sneakers locked onto hoverboard
+    // Rear sneaker (left foot): turned perpendicular across the kicktail
+    const rx = -boardWidth * 0.24;
+    const ry = -1;
+    // White vulcanized sole
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(rx - 7, ry - 3, 14, 3);
+    // Red skate shoe canvas upper
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(rx - 6, ry - 7, 12, 5);
+    // Heel counter & white shoe laces
+    ctx.fillStyle = '#b91c1c';
+    ctx.fillRect(rx - 6, ry - 6, 3, 4);
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(rx - 2, ry - 8, 4, 3);
 
-    // Sun-bleached blonde surf hair with coastal wind sway
-    const hairSway = Math.sin(now * 0.008) * 1.5;
-    ctx.fillStyle = '#fef08a';
-    ctx.beginPath();
-    ctx.arc(0 + hairSway, headY + 4, 7.2, Math.PI, Math.PI * 2);
-    ctx.fill();
+    // Front sneaker (right foot): angled forward toward the nose
+    const fx = boardWidth * 0.20;
+    const fy = -1;
+    // White vulcanized sole
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(fx - 6, fy - 3, 15, 3);
+    // Red skate shoe canvas upper angled forward
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(fx - 5, fy - 7, 14, 5);
+    // White rubber toe cap
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(fx + 6, fy - 6, 3, 4);
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(fx, ry - 8, 4, 3);
 
-    // Sleek surf sunglasses
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(-5, headY + 6.5, 10, 3);
+    // 8. Subway Surfers Character Pose & Street-Surfer Outfit
+    if (isDucking) {
+      // Duck: Low aerodynamic skateboard slide/crouch with both knees bent deep against the board
+      const hipY = -13;
 
-    // 6. Super-Surf Wave Shield (Hoverboard Shield): Radiant golden sun & ocean water aura
-    if (this.state.isHoverboardActive) {
-      const shieldRadius = Math.max(36, w * 0.088);
-      const pulse = 1.0 + Math.sin(now * 0.007) * 0.08;
-      const curRadius = shieldRadius * pulse;
-
-      ctx.save();
-      // Soft radiant golden sun aura
-      const auraGrad = ctx.createRadialGradient(0, -20, 5, 0, -20, curRadius);
-      auraGrad.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
-      auraGrad.addColorStop(0.6, 'rgba(56, 189, 248, 0.32)');
-      auraGrad.addColorStop(1, 'rgba(254, 215, 170, 0)');
-      ctx.fillStyle = auraGrad;
+      // Deeply flexed rear leg against deck
+      ctx.strokeStyle = '#1e293b'; // Dark urban jogger denim
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.arc(0, -20, curRadius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Shimmering sea-glass turquoise ring
-      ctx.strokeStyle = '#14b8a6';
-      ctx.lineWidth = 2.2;
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.arc(0, -20, curRadius * 0.88, 0, Math.PI * 2);
+      ctx.moveTo(rx, ry - 4);
+      ctx.lineTo(-boardWidth * 0.12, -9);
+      ctx.lineTo(-3, hipY);
       ctx.stroke();
 
-      // Glistening water droplets orbiting
-      for (let d = 0; d < 6; d++) {
-        const da = now * 0.003 + (d * Math.PI) / 3;
-        const dx = Math.cos(da) * curRadius * 0.88;
-        const dy = -20 + Math.sin(da) * curRadius * 0.88;
+      // Deeply flexed front leg against deck
+      ctx.beginPath();
+      ctx.moveTo(fx, fy - 4);
+      ctx.lineTo(boardWidth * 0.12, -10);
+      ctx.lineTo(3, hipY);
+      ctx.stroke();
+
+      // Torso hunched low and forward in aerodynamic slide
+      ctx.fillStyle = '#0284c7'; // Pacific cyan hoodie
+      ctx.beginPath();
+      ctx.moveTo(-5, hipY);
+      ctx.lineTo(4, hipY);
+      ctx.lineTo(12, -19);
+      ctx.lineTo(1, -21);
+      ctx.closePath();
+      ctx.fill();
+
+      // Layered white undershirt hem peeking out
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(-4, hipY - 2, 7, 2);
+
+      // Low aerodynamic balance arms
+      // Front arm skimming forward low along board
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.moveTo(10, -19);
+      ctx.lineTo(16, -17);
+      ctx.lineTo(22, -14);
+      ctx.stroke();
+      ctx.fillStyle = '#fed7aa'; // Hand
+      ctx.beginPath();
+      ctx.arc(22, -14, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rear arm swept back along board
+      ctx.strokeStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.moveTo(1, -19);
+      ctx.lineTo(-8, -16);
+      ctx.lineTo(-16, -13);
+      ctx.stroke();
+      ctx.fillStyle = '#fed7aa'; // Hand
+      ctx.beginPath();
+      ctx.arc(-16, -13, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Head tucked low and forward
+      const headX = 14;
+      const headY = -24;
+      ctx.fillStyle = '#fed7aa'; // Sun-kissed skin
+      ctx.beginPath();
+      ctx.arc(headX, headY, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Backwards Cap (aerodynamically tilted)
+      ctx.fillStyle = '#ef4444'; // Street coral red cap
+      ctx.beginPath();
+      ctx.arc(headX, headY, 7.0, -Math.PI * 0.85, 0.15);
+      ctx.fill();
+      // Backwards visor pointing back
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(headX - 6, headY + 1);
+      ctx.lineTo(headX - 14, headY - 1);
+      ctx.stroke();
+
+      // Street wrap-around shades
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(headX + 1, headY - 1, 7, 2.8);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(headX + 3, headY - 1, 2.5, 1);
+    } else {
+      // Authentic 3/4 sideways skate/hoverboard stance:
+      // Front foot angled forward, rear foot turned perpendicular, bent knees for suspension
+      const hipY = -28;
+
+      // Bent rear knee in suspension
+      ctx.strokeStyle = '#1e293b'; // Dark urban streetwear pants
+      ctx.lineWidth = 6.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(rx, ry - 4);
+      ctx.lineTo(-boardWidth * 0.18, -16);
+      ctx.lineTo(-6, hipY);
+      ctx.stroke();
+
+      // Bent front knee in suspension angled forward
+      ctx.beginPath();
+      ctx.moveTo(fx, fy - 4);
+      ctx.lineTo(boardWidth * 0.15, -16);
+      ctx.lineTo(5, hipY);
+      ctx.stroke();
+
+      // Knee fabric highlights
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(-boardWidth * 0.18, -16, 2, 0, Math.PI);
+      ctx.arc(boardWidth * 0.15, -16, 2, 0, Math.PI);
+      ctx.stroke();
+
+      // Layered white tee hem peeking at waist
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(-7, hipY - 2, 14, 2.5);
+
+      // Subway Surfers Street Hoodie (Pacific cyan with front pocket & drawstrings)
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.moveTo(-8, hipY);
+      ctx.lineTo(8, hipY);
+      ctx.lineTo(10, -48);
+      ctx.lineTo(-10, -48);
+      ctx.closePath();
+      ctx.fill();
+
+      // Hoodie kangaroo front pocket
+      ctx.fillStyle = '#0369a1';
+      this.drawRoundedRect(ctx, -5, hipY - 10, 11, 7, 2);
+      ctx.fill();
+
+      // White hoodie drawstrings
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(0, -47);
+      ctx.lineTo(-1.5, -40);
+      ctx.moveTo(4, -47);
+      ctx.lineTo(3, -40);
+      ctx.stroke();
+
+      // Arm balance: one arm extended forward for steering, rear arm balancing back
+      // Trailing rear arm balancing back
+      const rearArmRise = isJumping ? -6 : 0;
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.moveTo(-9, -46);
+      ctx.lineTo(-18, -42 + rearArmRise);
+      ctx.lineTo(-23, -36 + rearArmRise);
+      ctx.stroke();
+      ctx.fillStyle = '#fed7aa'; // Rear hand
+      ctx.beginPath();
+      ctx.arc(-23, -36 + rearArmRise, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Leading front arm extended forward for steering
+      const frontArmRise = isJumping ? -8 : 0;
+      ctx.strokeStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.moveTo(9, -46);
+      ctx.lineTo(18, -42 + frontArmRise);
+      ctx.lineTo(25, -38 + frontArmRise);
+      ctx.stroke();
+      ctx.fillStyle = '#fed7aa'; // Front hand steering into turn
+      ctx.beginPath();
+      ctx.arc(25, -38 + frontArmRise, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Head & Sun-kissed face
+      const headX = 3;
+      const headY = -56;
+      ctx.fillStyle = '#fed7aa';
+      ctx.beginPath();
+      ctx.arc(headX, headY, 7.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Wind-swept blonde surf hair peeking beneath cap
+      const hairSway = Math.sin(now * 0.008) * 1.5;
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(headX - 4 + hairSway, headY + 4, 3.5, 0, Math.PI * 2);
+      ctx.arc(headX + hairSway, headY + 6, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cool Backwards Cap (Vibrant coral red with curved snapback visor pointing backward)
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(headX, headY - 1, 8.0, -Math.PI * 0.9, 0.05);
+      ctx.fill();
+
+      // Snapback arched rear cutout above brim
+      ctx.fillStyle = '#fed7aa';
+      ctx.beginPath();
+      ctx.arc(headX - 6, headY - 1, 2.2, 0, Math.PI);
+      ctx.fill();
+
+      // Visor / curved brim extending BACKWARDS
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2.8;
+      ctx.beginPath();
+      ctx.moveTo(headX - 6, headY - 1);
+      ctx.quadraticCurveTo(headX - 10, headY, headX - 15, headY + 1.5);
+      ctx.stroke();
+
+      // Cap top button
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(headX + 1, headY - 9, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sleek street sunglasses
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(headX + 1, headY - 1.5, 8, 3.2);
+      ctx.fillStyle = '#38bdf8'; // Sky reflection glint
+      ctx.fillRect(headX + 3.5, headY - 1.5, 3, 1.2);
+    }
+
+    // 9. Wave Shield (Hoverboard Powerup): Glowing particle energy rings around the hoverboard
+    if (this.state.isHoverboardActive) {
+      const shieldRadius = Math.max(38, w * 0.092);
+      const pulse1 = 1.0 + Math.sin(now * 0.009) * 0.06;
+      const pulse2 = 1.0 + Math.cos(now * 0.012) * 0.06;
+      const r1 = shieldRadius * pulse1;
+      const r2 = shieldRadius * 0.82 * pulse2;
+      const centerY = isDucking ? -15 : -30;
+
+      ctx.save();
+      // Soft radiant golden-aqua energy aura
+      const auraGrad = ctx.createRadialGradient(0, centerY, 6, 0, centerY, r1 * 1.15);
+      auraGrad.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
+      auraGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.32)');
+      auraGrad.addColorStop(1, 'rgba(14, 165, 233, 0)');
+      ctx.fillStyle = auraGrad;
+      ctx.beginPath();
+      ctx.arc(0, centerY, r1 * 1.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Outer Glowing Particle Energy Ring (Perspective elliptical orbit around hoverboard)
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.4;
+      ctx.shadowColor = '#0284c7';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.ellipse(0, centerY, r1, r1 * 0.68, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Inner Shimmering Golden Sun Energy Ring
+      ctx.strokeStyle = '#fde047';
+      ctx.lineWidth = 1.8;
+      ctx.shadowColor = '#eab308';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.ellipse(0, centerY, r2, r2 * 0.68, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Glowing Particle Nodes orbiting on outer ring
+      for (let p = 0; p < 6; p++) {
+        const pa = now * 0.004 + (p * Math.PI * 2) / 6;
+        const px = Math.cos(pa) * r1;
+        const py = centerY + Math.sin(pa) * (r1 * 0.68);
         ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = '#ffffff';
-        ctx.shadowBlur = 6;
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 8;
         ctx.beginPath();
-        ctx.arc(dx, dy, 2.5, 0, Math.PI * 2);
+        ctx.arc(px, py, 3.2, 0, Math.PI * 2);
         ctx.fill();
       }
+
+      // Counter-orbiting golden particles on inner ring
+      for (let p = 0; p < 4; p++) {
+        const pa = -now * 0.005 + (p * Math.PI * 2) / 4;
+        const px = Math.cos(pa) * r2;
+        const py = centerY + Math.sin(pa) * (r2 * 0.68);
+        ctx.fillStyle = '#fef08a';
+        ctx.shadowColor = '#f59e0b';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(px, py, 2.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.restore();
     }
 
     ctx.restore();
   }
 
-  private drawWaterSpray(ctx: CanvasRenderingContext2D, now: number): void {
+  private drawHoverboardTrails(
+    ctx: CanvasRenderingContext2D,
+    now: number,
+    isJumping: boolean,
+    boardWidth: number,
+  ): void {
     ctx.save();
-    // Realistic foaming sea spray trails fanning out from the longboard tail
-    for (let s = 0; s < 9; s++) {
-      const t = (now * 0.006 + s * 0.36) % 1.0;
-      const sprayY = 6 + t * 26;
-      const spread = 9 + t * 28;
-      const alpha = (1.0 - t) * 0.72;
+    // Dual hover propulsion vapor trails streaming from the tail
+    const boost = isJumping ? 1.4 : 1.0;
+    for (const trailX of [-boardWidth * 0.32, -boardWidth * 0.14]) {
+      for (let s = 0; s < 7; s++) {
+        const t = (now * 0.007 + s * 0.14 + (trailX < -boardWidth * 0.2 ? 0 : 0.07)) % 1.0;
+        const trailY = 5 + t * (28 * boost);
+        const spreadX = trailX - t * 12;
+        const radius = (2.2 + t * 4.5) * boost;
+        const alpha = (1.0 - t) * (isJumping ? 0.75 : 0.52);
 
-      ctx.fillStyle = `rgba(240, 253, 250, ${alpha})`;
-      // Left spray droplet
-      ctx.beginPath();
-      ctx.arc(-spread, sprayY, 2 + t * 2.2, 0, Math.PI * 2);
-      ctx.fill();
-      // Right spray droplet
-      ctx.beginPath();
-      ctx.arc(spread, sprayY, 2 + t * 2.2, 0, Math.PI * 2);
-      ctx.fill();
+        // Outer glowing cyan vapor puff
+        ctx.fillStyle = `rgba(56, 189, 248, ${alpha * 0.65})`;
+        ctx.beginPath();
+        ctx.arc(spreadX, trailY, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner bright plasma core
+        ctx.fillStyle = `rgba(240, 249, 255, ${alpha * 0.85})`;
+        ctx.beginPath();
+        ctx.arc(spreadX, trailY - 1, radius * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     ctx.restore();
   }
