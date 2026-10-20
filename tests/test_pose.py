@@ -111,7 +111,8 @@ def test_pose_extractor_extract_valid_pose() -> None:
     extractor = PoseExtractor(landmarker=mock_landmarker)
     img = np.zeros((480, 640, 3), dtype=np.uint8)
 
-    frame = extractor.extract(img, timestamp_s=123.45)
+    with patch("mediapipe.Image"):
+        frame = extractor.extract(img, timestamp_s=123.45)
     assert frame is not None
     assert frame.timestamp == 123.45
     assert frame.left_shoulder.x == 0.4
@@ -129,7 +130,8 @@ def test_pose_extractor_extract_no_pose() -> None:
     extractor = PoseExtractor(landmarker=mock_landmarker)
     img = np.zeros((480, 640, 3), dtype=np.uint8)
 
-    frame = extractor.extract(img, timestamp_s=1.0)
+    with patch("mediapipe.Image"):
+        frame = extractor.extract(img, timestamp_s=1.0)
     assert frame is None
 
 
@@ -145,4 +147,5 @@ def test_pose_extractor_extract_empty_or_few_landmarks() -> None:
     mock_result = MagicMock()
     mock_result.pose_landmarks = [[MagicMock() for _ in range(20)]]
     mock_landmarker.detect.return_value = mock_result
-    assert extractor.extract(np.zeros((100, 100, 3), dtype=np.uint8)) is None
+    with patch("mediapipe.Image"):
+        assert extractor.extract(np.zeros((100, 100, 3), dtype=np.uint8)) is None
