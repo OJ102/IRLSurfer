@@ -17,6 +17,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const btnModeKeyboard = document.getElementById('btnModeKeyboard') as HTMLButtonElement;
   const btnModeWebcam = document.getElementById('btnModeWebcam') as HTMLButtonElement;
   const btnEnableCam = document.getElementById('btnEnableCam') as HTMLButtonElement;
+  const btnMute = document.getElementById('btnMute') as HTMLButtonElement | null;
   const btnPause = document.getElementById('btnPause') as HTMLButtonElement;
   const btnRecalibrate = document.getElementById('btnRecalibrate') as HTMLButtonElement;
   const cameraPrompt = document.getElementById('cameraPrompt') as HTMLDivElement;
@@ -34,6 +35,40 @@ window.addEventListener('DOMContentLoaded', async () => {
   const detector = new GestureDetector();
   const hud = new CameraHUD(hudCanvas);
   const poseTracker = new PoseTracker();
+
+  // Mode defaults to keyboard on startup: isolate input detector
+  detector.pause();
+
+  // Fix replay lane de-sync: reset detector lane state on game restart
+  game.onRestart = () => {
+    if (detector) {
+      detector.resetLane();
+    }
+  };
+
+  // Web Audio autoplay unlock on first user interaction
+  const unlockAudio = () => {
+    game.resumeAudio();
+  };
+  window.addEventListener('pointerdown', unlockAudio, { passive: true });
+  window.addEventListener('keydown', unlockAudio, { passive: true });
+  btnEnableCam.addEventListener('click', unlockAudio);
+
+  // Audio mute toggle button
+  function updateMuteButton(): void {
+    if (btnMute) {
+      btnMute.textContent = game.isMuted ? '🔇' : '🔊';
+      btnMute.title = game.isMuted ? 'Unmute audio [M]' : 'Mute audio [M]';
+      btnMute.setAttribute('aria-label', game.isMuted ? 'Unmute audio' : 'Mute audio');
+    }
+  }
+
+  if (btnMute) {
+    btnMute.addEventListener('click', () => {
+      game.toggleMute();
+      updateMuteButton();
+    });
+  }
 
   // Speed Multiplier Controller logic
   function applySpeed(multiplier: number, syncSlider: boolean = true): void {
@@ -82,9 +117,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (mode === 'keyboard') {
       btnModeKeyboard.classList.add('active');
       btnModeWebcam.classList.remove('active');
+      detector.pause();
     } else {
       btnModeKeyboard.classList.remove('active');
       btnModeWebcam.classList.add('active');
+      detector.resume();
       if (!isWebcamRunning) {
         startCameraTracking();
       }
@@ -115,7 +152,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     detector.recalibrate();
   });
 
-  // Global UX Hotkeys: 'p' for pause, 'c' for recalibrate, '['/']' for speed
+  // Global UX Hotkeys: 'p' for pause, 'm' for mute, 'c' for recalibrate, '['/']' for speed
   window.addEventListener('keydown', (e) => {
     if (
       (e.target instanceof HTMLInputElement && e.target !== speedSlider) ||
@@ -125,6 +162,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     if (e.key === 'p' || e.key === 'P') {
       togglePause();
+    } else if (e.key === 'm' || e.key === 'M') {
+      game.toggleMute();
+      updateMuteButton();
     } else if (e.key === 'c' || e.key === 'C') {
       detector.recalibrate();
     } else if (e.key === '[') {
@@ -157,12 +197,31 @@ window.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
       console.error('Failed to initialize webcam:', err);
       cameraPrompt.classList.remove('hidden');
+      const errorMsg = (err as Error).message || 'Camera permission was denied.';
       cameraPrompt.innerHTML = `
-        <p style="color: #ff0055; font-weight: bold;">Camera Access Failed</p>
-        <p style="font-size: 0.8rem;">${(err as Error).message || 'Permissions denied'}</p>
-        <button id="btnRetryCam" class="btn btn-primary" style="margin-top: 8px;">Retry Camera</button>
+        <div class="camera-error-container" style="padding: 10px; text-align: center; max-width: 90%;">
+          <div style="font-size: 1.6rem; margin-bottom: 4px;">📷⚠️</div>
+          <p style="color: #f43f5e; font-weight: 700; margin-bottom: 6px; font-size: 0.95rem;">Camera Access Denied or Unavailable</p>
+          <p style="font-size: 0.78rem; color: #cbd5e1; margin-bottom: 10px; line-height: 1.4;">
+            ${errorMsg}
+          </p>
+          <div style="text-align: left; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 6px; padding: 8px 12px; font-size: 0.74rem; color: #94a3b8; margin-bottom: 12px; line-height: 1.4;">
+            <p style="font-weight: 600; color: #38bdf8; margin-bottom: 4px;">How to enable camera access in your browser:</p>
+            <ol style="margin-left: 16px; margin-bottom: 0; padding-left: 0;">
+              <li>Click the <strong>camera / lock icon (🔒)</strong> in your browser's address bar.</li>
+              <li>Set <strong>Camera</strong> permissions to <strong>Allow</strong>.</li>
+              <li>Ensure no other application (Zoom, Teams, FaceTime) is currently locking your camera.</li>
+              <li>Click <strong>Retry Camera</strong> below.</li>
+            </ol>
+          </div>
+          <div style="display: flex; gap: 8px; justify-content: center;">
+            <button id="btnRetryCam" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.8rem;">Retry Camera</button>
+            <button id="btnFallbackKeyboard" class="btn" style="padding: 6px 14px; font-size: 0.8rem;">Play with Keyboard</button>
+          </div>
+        </div>
       `;
       document.getElementById('btnRetryCam')?.addEventListener('click', startCameraTracking);
+      document.getElementById('btnFallbackKeyboard')?.addEventListener('click', () => setMode('keyboard'));
     }
   }
 

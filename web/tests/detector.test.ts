@@ -341,4 +341,27 @@ describe('GestureDetector Unit Tests', () => {
     expect(detector.speedMultiplier).toBe(2.5);
     expect(detector.jumpVelThresh).toBeCloseTo(0.60 * 2.5, 4);
   });
+
+  it('resets lane state with resetLane()', () => {
+    detector.currentLane = 1;
+    detector.resetLane();
+    expect(detector.currentLane).toBe(0);
+
+    detector.currentLane = -1;
+    detector.resetLane();
+    expect(detector.currentLane).toBe(0);
+  });
+
+  it('ignores frames when paused and restores on resume', () => {
+    detector.state = DetectorState.ACTIVE;
+    detector.pause();
+    expect(detector.state).toBe(DetectorState.PAUSED);
+
+    const frame = createDummyFrame(10.0, 0.8, 0.5, 0.20);
+    const events = detector.processFrame(frame);
+    expect(events).toEqual([]);
+
+    detector.resume();
+    expect(detector.state).toBe(DetectorState.ACTIVE);
+  });
 });

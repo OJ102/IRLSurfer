@@ -1,7 +1,8 @@
 /**
  * Camera HUD and Pose Skeleton Overlay.
  * Visualizes real-time body tracking, calibration status, and detected gestures
- * with modern cyberpunk aesthetics, glowing neon skeleton joints, and glassmorphic UI.
+ * with relaxed California coastal aesthetics, warm ocean sea-glass panels,
+ * and high-contrast ergonomic skeleton rendering.
  */
 
 import {
@@ -30,19 +31,19 @@ export class CameraHUD {
   showGestureBanner(event: GestureEvent): void {
     switch (event) {
       case GestureEvent.LANE_LEFT:
-        this.lastBannerText = '◀ LANE LEFT';
+        this.lastBannerText = '◀ CARVE LEFT';
         break;
       case GestureEvent.LANE_RIGHT:
-        this.lastBannerText = 'LANE RIGHT ▶';
+        this.lastBannerText = 'CARVE RIGHT ▶';
         break;
       case GestureEvent.JUMP:
-        this.lastBannerText = '▲ JUMP ▲';
+        this.lastBannerText = '▲ RIDE SWELL (JUMP) ▲';
         break;
       case GestureEvent.DUCK:
-        this.lastBannerText = '▼ DUCK ▼';
+        this.lastBannerText = '▼ SURF TUCK (DUCK) ▼';
         break;
       case GestureEvent.HOVERBOARD:
-        this.lastBannerText = '⚡ HOVERBOARD SHIELD ⚡';
+        this.lastBannerText = '☀️ SUPER-SURF WAVE SHIELD ☀️';
         break;
     }
     this.bannerAlpha = 1.0;
@@ -69,16 +70,16 @@ export class CameraHUD {
       ctx.drawImage(video, 0, 0, w, h);
       ctx.restore();
     } else {
-      // Placeholder dark cyberpunk background
-      ctx.fillStyle = '#0a0717';
+      // Placeholder oceanic backdrop
+      ctx.fillStyle = '#091321';
       ctx.fillRect(0, 0, w, h);
     }
 
-    // Semi-transparent dark tint for high contrast
-    ctx.fillStyle = 'rgba(8, 5, 18, 0.45)';
+    // Semi-transparent deep coastal tint for high contrast
+    ctx.fillStyle = 'rgba(9, 19, 33, 0.45)';
     ctx.fillRect(0, 0, w, h);
 
-    // Cyber corner reticle brackets
+    // Coastal corner reticle brackets
     this.drawReticleBrackets(ctx, w, h);
 
     // 2. Draw Skeleton if landmarks available
@@ -98,20 +99,20 @@ export class CameraHUD {
       this.drawCalibrationDistanceAlert(ctx, detector, w, h);
     }
 
-    // 5. Draw Gesture Banner Notification with smooth fadeout and cyber glow
+    // 5. Draw Gesture Banner Notification with smooth fadeout
     if (this.bannerAlpha > 0.01) {
       ctx.save();
       ctx.globalAlpha = this.bannerAlpha;
-      ctx.fillStyle = 'rgba(14, 9, 28, 0.88)';
+      ctx.fillStyle = 'rgba(11, 23, 40, 0.9)';
       ctx.fillRect(16, h - 56, w - 32, 44);
-      ctx.strokeStyle = '#00ffff';
-      ctx.lineWidth = 2;
-      ctx.shadowColor = '#00ffff';
-      ctx.shadowBlur = 12;
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = 'rgba(56, 189, 248, 0.4)';
+      ctx.shadowBlur = 10;
       ctx.strokeRect(16, h - 56, w - 32, 44);
 
-      ctx.fillStyle = '#00ffff';
-      ctx.font = 'bold 18px "Courier New", monospace';
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(this.lastBannerText, w / 2, h - 28);
       ctx.restore();
@@ -126,7 +127,7 @@ export class CameraHUD {
     h: number,
   ): void {
     ctx.save();
-    ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
     ctx.lineWidth = 2;
     const bracketLen = 20;
 
@@ -167,7 +168,6 @@ export class CameraHUD {
     w: number,
     h: number,
   ): void {
-    // Note: mirror landmark X to match video mirror (1.0 - x)
     const getCoords = (idx: number): { x: number; y: number } | null => {
       const lm = landmarks[idx];
       if (!lm || (lm.visibility ?? 1.0) < 0.4) return null;
@@ -177,10 +177,6 @@ export class CameraHUD {
       };
     };
 
-    // Connections:
-    // Torso: 11 (L shoulder) - 12 (R shoulder) - 24 (R hip) - 23 (L hip) - 11
-    // Arms: 11 - 13 (L elbow) - 15 (L wrist)
-    // Arms: 12 - 14 (R elbow) - 16 (R wrist)
     const connections: [number, number][] = [
       [11, 12],
       [12, 24],
@@ -193,10 +189,10 @@ export class CameraHUD {
     ];
 
     ctx.save();
-    ctx.strokeStyle = '#00ffff';
+    ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 3.5;
-    ctx.shadowColor = '#00ffff';
-    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(56, 189, 248, 0.5)';
+    ctx.shadowBlur = 8;
 
     for (const [i, j] of connections) {
       const p1 = getCoords(i);
@@ -209,15 +205,15 @@ export class CameraHUD {
       }
     }
 
-    // Key joint points with glowing nodes
+    // Key joint points with warm coastal accents
     const keyJoints = [11, 12, 23, 24, 15, 16];
     for (const j of keyJoints) {
       const p = getCoords(j);
       if (p) {
         const isWrist = j === 15 || j === 16;
-        ctx.fillStyle = isWrist ? '#ffe600' : '#ff00aa';
+        ctx.fillStyle = isWrist ? '#fbbf24' : '#fb7185';
         ctx.shadowColor = ctx.fillStyle;
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 8;
         ctx.beginPath();
         ctx.arc(p.x, p.y, isWrist ? 7 : 5, 0, Math.PI * 2);
         ctx.fill();
@@ -244,44 +240,44 @@ export class CameraHUD {
   ): void {
     ctx.save();
 
-    // Top status pill (Glassmorphism look)
+    // Top status pill (Sea-glass styling)
     const state = detector.state;
-    let badgeColor = '#00ffcc';
-    let text = 'CONTROLLER: ACTIVE';
+    let badgeColor = '#34d399';
+    let text = 'SURFER: ACTIVE';
 
     if (state === DetectorState.CALIBRATING) {
       if (
         detector.lastDistanceStatus === DistanceStatus.TOO_CLOSE ||
         detector.lastDistanceStatus === DistanceStatus.TOO_FAR
       ) {
-        badgeColor = '#ffaa00';
+        badgeColor = '#fbbf24';
         text = 'CALIBRATION PAUSED: DISTANCE';
       } else {
-        badgeColor = '#ffe600';
-        text = 'STAND STILL - CALIBRATING...';
+        badgeColor = '#fbbf24';
+        text = 'STAND IN READY STANCE - CALIBRATING...';
       }
     } else if (state === DetectorState.PAUSED) {
-      badgeColor = '#ff0055';
+      badgeColor = '#f87171';
       text = 'CONTROLLER: PAUSED';
     }
 
-    ctx.fillStyle = 'rgba(14, 9, 28, 0.85)';
+    ctx.fillStyle = 'rgba(11, 23, 40, 0.88)';
     ctx.fillRect(8, 8, w - 16, 38);
     ctx.strokeStyle = badgeColor;
     ctx.lineWidth = 1.5;
     ctx.shadowColor = badgeColor;
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 6;
     ctx.strokeRect(8, 8, w - 16, 38);
 
     ctx.fillStyle = badgeColor;
-    ctx.font = 'bold 11px monospace';
+    ctx.font = 'bold 11px system-ui, -apple-system, monospace';
     ctx.textAlign = 'left';
     ctx.fillText(text, 16, 26);
 
     // Speed Multiplier pill badge
     const speed = detector.speedMultiplier ?? 1.0;
-    const speedBadgeText = `[${speed.toFixed(1)}x SPEED]`;
-    ctx.fillStyle = '#ffe600';
+    const speedBadgeText = `[${speed.toFixed(1)}x CRUISE]`;
+    ctx.fillStyle = '#fbbf24';
     const textMetrics = ctx.measureText(text);
     ctx.fillText(speedBadgeText, 16 + textMetrics.width + 12, 26);
 
@@ -298,22 +294,22 @@ export class CameraHUD {
 
     // Distance Status pill badge in header
     const distStatus = detector.lastDistanceStatus;
-    let distColor = '#888888';
-    let distText = 'NO PERSON DETECTED';
+    let distColor = '#94a3b8';
+    let distText = 'NO SURFER DETECTED';
     if (distStatus === DistanceStatus.OPTIMAL) {
-      distColor = '#00ff88';
-      distText = 'DISTANCE OK';
+      distColor = '#34d399';
+      distText = 'DISTANCE OPTIMAL';
     } else if (distStatus === DistanceStatus.TOO_CLOSE) {
-      distColor = '#ff3344';
+      distColor = '#f87171';
       distText = 'STEP BACK - TOO CLOSE';
     } else if (distStatus === DistanceStatus.TOO_FAR) {
-      distColor = '#ffaa00';
+      distColor = '#fbbf24';
       distText = 'STEP CLOSER - TOO FAR';
     }
 
     ctx.fillStyle = distColor;
     ctx.textAlign = 'center';
-    ctx.font = 'bold 11px monospace';
+    ctx.font = 'bold 11px system-ui, -apple-system, monospace';
     ctx.fillText(distText, w / 2, 22);
 
     // Horizontal shoulder-width meter
@@ -326,14 +322,14 @@ export class CameraHUD {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fillRect(meterX, meterY, meterW, meterH);
 
-    // Optimal bracket [0.14, 0.45] over [0.0, 0.60]
+    // Optimal bracket
     const rangeMax = 0.60;
     const optX1 = meterX + (detector.config.min_shoulder_width / rangeMax) * meterW;
     const optX2 = meterX + (detector.config.max_shoulder_width / rangeMax) * meterW;
-    ctx.fillStyle = 'rgba(0, 255, 136, 0.4)';
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.45)';
     ctx.fillRect(optX1, meterY, Math.max(1, optX2 - optX1), meterH);
 
-    // Current shoulder-width indicator dot / tick
+    // Current shoulder-width indicator dot
     if (landmarks && landmarks.length > 12) {
       const l11 = landmarks[11];
       const l12 = landmarks[12];
@@ -345,10 +341,10 @@ export class CameraHUD {
           sw >= detector.config.min_shoulder_width &&
           sw <= detector.config.max_shoulder_width;
         ctx.fillStyle = inOpt
-          ? '#00ff88'
+          ? '#34d399'
           : sw > detector.config.max_shoulder_width
-            ? '#ff3344'
-            : '#ffaa00';
+            ? '#f87171'
+            : '#fbbf24';
         ctx.fillRect(curX - 1.5, meterY - 1, 3, meterH + 2);
       }
     }
@@ -357,9 +353,9 @@ export class CameraHUD {
     if (state === DetectorState.CALIBRATING) {
       const progress = detector.calibrationProgress;
       const barW = w - 32;
-      ctx.fillStyle = 'rgba(255, 230, 0, 0.2)';
+      ctx.fillStyle = 'rgba(251, 191, 36, 0.2)';
       ctx.fillRect(16, 48, barW, 6);
-      ctx.fillStyle = '#ffe600';
+      ctx.fillStyle = '#fbbf24';
       ctx.fillRect(16, 48, barW * progress, 6);
     }
 
@@ -379,7 +375,7 @@ export class CameraHUD {
     const instruction = isTooClose
       ? 'STEP BACK - MOVE AWAY FROM CAMERA'
       : 'STEP CLOSER - MOVE TOWARDS CAMERA';
-    const alertColor = isTooClose ? '#ff3344' : '#ffaa00';
+    const alertColor = isTooClose ? '#f87171' : '#fbbf24';
 
     ctx.save();
     const boxW = Math.min(w - 32, 420);
@@ -387,24 +383,24 @@ export class CameraHUD {
     const x = (w - boxW) / 2;
     const y = (h - boxH) / 2;
 
-    // Dark card background
-    ctx.fillStyle = 'rgba(15, 10, 20, 0.92)';
+    // Sea-glass card background
+    ctx.fillStyle = 'rgba(11, 22, 38, 0.94)';
     ctx.fillRect(x, y, boxW, boxH);
 
     // Alert border
     ctx.strokeStyle = alertColor;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
     ctx.strokeRect(x, y, boxW, boxH);
 
     // Title
     ctx.fillStyle = alertColor;
-    ctx.font = 'bold 14px monospace';
+    ctx.font = 'bold 14px system-ui, -apple-system, monospace';
     ctx.textAlign = 'center';
     ctx.fillText(title, w / 2, y + 30);
 
     // Instruction
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 12px monospace';
+    ctx.font = 'bold 12px system-ui, -apple-system, monospace';
     ctx.fillText(instruction, w / 2, y + 56);
 
     ctx.restore();

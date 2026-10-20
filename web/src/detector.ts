@@ -153,6 +153,10 @@ export class GestureDetector {
     }
   }
 
+  resetLane(): void {
+    this.currentLane = 0;
+  }
+
   recalibrate(): void {
     this.state = DetectorState.CALIBRATING;
     this._calibStartTime = null;

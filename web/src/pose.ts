@@ -49,22 +49,37 @@ export class PoseTracker {
 
   async startWebcam(video: HTMLVideoElement): Promise<void> {
     this.videoElement = video;
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 640 },
-        height: { ideal: 480 },
-        facingMode: 'user',
-      },
-      audio: false,
-    });
-    this.stream = stream;
-    this.videoElement.srcObject = stream;
-    await new Promise<void>((resolve) => {
-      this.videoElement!.onloadedmetadata = () => {
-        this.videoElement!.play();
-        resolve();
-      };
-    });
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('Camera access API is not supported in this browser environment.');
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user',
+        },
+        audio: false,
+      });
+      this.stream = stream;
+      this.videoElement.srcObject = stream;
+      await new Promise<void>((resolve) => {
+        this.videoElement!.onloadedmetadata = () => {
+          this.videoElement!.play();
+          resolve();
+        };
+      });
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        throw new Error('Camera access was blocked or denied by your browser settings.');
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        throw new Error('No webcam or video capture device was detected on your machine.');
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        throw new Error('Your webcam is currently in use by another application.');
+      }
+      throw error;
+    }
   }
 
   stopWebcam(): void {

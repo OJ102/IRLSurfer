@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { GameState, ObstacleType, RunnerGame } from '../src/game';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { GameState, ObstacleType, RunnerGame, SoundEffects } from '../src/game';
 
 describe('GameState Logic & Physics Unit Tests', () => {
   let state: GameState;
@@ -308,6 +308,155 @@ describe('GameState Logic & Physics Unit Tests', () => {
       game.setSpeedMultiplier(5.0);
       expect(game.speedMultiplier).toBe(2.5);
       expect(game.state.speedMultiplier).toBe(2.5);
+    });
+
+    it('supports audio mute toggling on SoundEffects and RunnerGame', () => {
+      const sounds = new SoundEffects();
+      expect(sounds.enabled).toBe(true);
+      expect(sounds.isMuted).toBe(false);
+
+      const muted = sounds.toggleMute();
+      expect(muted).toBe(true);
+      expect(sounds.isMuted).toBe(true);
+      expect(sounds.enabled).toBe(false);
+
+      sounds.isMuted = false;
+      expect(sounds.enabled).toBe(true);
+
+      const mockCtx = {
+        fillRect: () => {},
+        clearRect: () => {},
+        strokeRect: () => {},
+        beginPath: () => {},
+        closePath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        stroke: () => {},
+        fill: () => {},
+        arc: () => {},
+        ellipse: () => {},
+        fillText: () => {},
+        measureText: () => ({ width: 50 }),
+        save: () => {},
+        restore: () => {},
+        createLinearGradient: () => ({ addColorStop: () => {} }),
+      } as unknown as CanvasRenderingContext2D;
+
+      const mockCanvas = {
+        width: 800,
+        height: 600,
+        getContext: () => mockCtx,
+      } as unknown as HTMLCanvasElement;
+
+      const game = new RunnerGame(mockCanvas);
+      expect(game.isMuted).toBe(false);
+      expect(game.toggleMute()).toBe(true);
+      expect(game.isMuted).toBe(true);
+    });
+
+    it('unfreezes particles and confetti during game over or pause', () => {
+      const state = new GameState();
+      state.isGameOver = true;
+      state.particles = [
+        { x: 0, y: 0, vx: 50, vy: 50, color: '#f00', size: 4, life: 0, maxLife: 1.0 },
+      ];
+      state.floatingTexts = [
+        { id: 1, text: 'NEW BEST!', x: 0, y: 100, color: '#ff0', fontSize: 20, life: 0, maxLife: 1.0, scale: 1, vy: 20 },
+      ];
+
+      state.update(0.1);
+      expect(state.particles[0].x).toBeGreaterThan(0);
+      expect(state.particles[0].life).toBeCloseTo(0.1, 4);
+      expect(state.floatingTexts[0].life).toBeCloseTo(0.1, 4);
+
+      state.isGameOver = false;
+      state.isPaused = true;
+      state.update(0.1);
+      expect(state.particles[0].life).toBeCloseTo(0.2, 4);
+      expect(state.floatingTexts[0].life).toBeCloseTo(0.2, 4);
+    });
+
+    it('clamps negative dt to 0.0 in update', () => {
+      const state = new GameState();
+      state.score = 100;
+      state.update(-0.5);
+      expect(state.score).toBe(100); // Does not decrease
+    });
+
+    it('invokes onRestart callback on restart and proxies from RunnerGame', () => {
+      const state = new GameState();
+      const restartSpy = vi.fn();
+      state.onRestart = restartSpy;
+      state.restart();
+      expect(restartSpy).toHaveBeenCalledTimes(1);
+
+      const mockCtx = {
+        fillRect: () => {},
+        clearRect: () => {},
+        strokeRect: () => {},
+        beginPath: () => {},
+        closePath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        stroke: () => {},
+        fill: () => {},
+        arc: () => {},
+        ellipse: () => {},
+        fillText: () => {},
+        measureText: () => ({ width: 50 }),
+        save: () => {},
+        restore: () => {},
+        createLinearGradient: () => ({ addColorStop: () => {} }),
+      } as unknown as CanvasRenderingContext2D;
+
+      const mockCanvas = {
+        width: 800,
+        height: 600,
+        getContext: () => mockCtx,
+      } as unknown as HTMLCanvasElement;
+
+      const game = new RunnerGame(mockCanvas);
+      const gameRestartSpy = vi.fn();
+      game.onRestart = gameRestartSpy;
+      game.restart();
+      expect(gameRestartSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('handles Retina scaling and virtual coordinates in RunnerGame', () => {
+      const mockCtx = {
+        fillRect: () => {},
+        clearRect: () => {},
+        strokeRect: () => {},
+        beginPath: () => {},
+        closePath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        stroke: () => {},
+        fill: () => {},
+        arc: () => {},
+        ellipse: () => {},
+        fillText: () => {},
+        measureText: () => ({ width: 50 }),
+        save: () => {},
+        restore: () => {},
+        scale: () => {},
+        translate: () => {},
+        createLinearGradient: () => ({ addColorStop: () => {} }),
+      } as unknown as CanvasRenderingContext2D;
+
+      const mockCanvas = {
+        width: 800,
+        height: 600,
+        getContext: () => mockCtx,
+      } as unknown as HTMLCanvasElement;
+
+      const game = new RunnerGame(mockCanvas);
+      expect(game.virtualWidth).toBe(800);
+      expect(game.virtualHeight).toBe(600);
+
+      game.resize();
+      expect(mockCanvas.width).toBeGreaterThanOrEqual(800);
+      expect(mockCanvas.height).toBeGreaterThanOrEqual(600);
     });
   });
 });

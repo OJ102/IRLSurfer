@@ -3,14 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IRLSurfer - Synthwave Vision Runner</title>
+    <title>IRLSurfer - California Beach Surfer</title>
     <link rel="stylesheet" href="./src/style.css" />
   </head>
   <body>
     <header>
       <div class="brand">
-        <h1>IRLSurfer</h1>
-        <span class="badge">WEB RUNTIME</span>
+        <div class="brand-icon">🏄</div>
+        <div>
+          <h1>IRLSurfer</h1>
+          <span class="subbrand">VENICE BEACH & PACIFIC COAST HIGHWAY</span>
+        </div>
+        <span class="badge">CALIFORNIA COASTAL EDITION</span>
       </div>
 
       <div class="privacy-notice" title="Privacy Guaranteed">
@@ -29,7 +33,7 @@
 
         <div class="speed-controller" title="Game Speed Controller [[ / ]]">
           <div class="speed-header">
-            <span class="speed-label">SPEED:</span>
+            <span class="speed-label">PACIFIC CRUISE:</span>
             <span id="speedValue" class="speed-badge">1.0x</span>
           </div>
           <input
@@ -41,16 +45,17 @@
             step="0.05"
             value="1.0"
             aria-label="Speed Multiplier Slider"
-            title="Drag to change speed (0.5x - 2.5x)"
+            title="Drag to change cruise speed (0.5x - 2.5x)"
           />
           <div class="speed-presets">
-            <button class="speed-preset-btn" data-speed="0.5" title="Warmup speed (0.5x)">0.5x (Warmup)</button>
-            <button class="speed-preset-btn active" data-speed="1.0" title="Normal speed (1.0x)">1.0x (Normal)</button>
-            <button class="speed-preset-btn" data-speed="1.5" title="Turbo speed (1.5x)">1.5x (Turbo)</button>
-            <button class="speed-preset-btn" data-speed="2.0" title="Insane speed (2.0x)">2.0x (Insane)</button>
+            <button class="speed-preset-btn" data-speed="0.5" title="Warmup cruise (0.5x)">0.5x (Mellow)</button>
+            <button class="speed-preset-btn active" data-speed="1.0" title="Normal cruise (1.0x)">1.0x (Coast)</button>
+            <button class="speed-preset-btn" data-speed="1.5" title="Breeze cruise (1.5x)">1.5x (Breeze)</button>
+            <button class="speed-preset-btn" data-speed="2.0" title="Wild swell (2.0x)">2.0x (Swell)</button>
           </div>
         </div>
 
+        <button id="btnMute" class="btn" title="Toggle audio mute [M]" aria-label="Toggle audio mute">🔊</button>
         <button id="btnPause" class="btn" title="Toggle pause [P]">Pause</button>
         <button id="btnRecalibrate" class="btn" title="Recalibrate standing baseline [C]">Recalibrate</button>
       </div>
@@ -64,58 +69,58 @@
       <aside class="sidebar">
         <div class="camera-card">
           <div class="camera-header">
-            <span>VISION SKELETON FEED</span>
+            <span>VISION POSE CONTROLLER FEED</span>
             <span id="cameraFps">-- FPS</span>
           </div>
           <div class="camera-view-container">
             <video id="webcamVideo" playsinline autoplay muted width="640" height="480"></video>
             <canvas id="hudCanvas" width="640" height="480"></canvas>
             <div id="cameraPrompt" class="camera-overlay-prompt">
-              <p>Play using body gestures via your webcam!</p>
-              <button id="btnEnableCam" class="btn btn-primary">Enable Webcam Controller</button>
-              <p style="font-size: 0.75rem; color: #888;">Or use keyboard Arrow keys / Space anytime.</p>
+              <p>Surf using natural body gestures via your webcam!</p>
+              <button id="btnEnableCam" class="btn btn-primary">Enable Webcam Surfer</button>
+              <p style="font-size: 0.75rem; color: #64748b;">Or use keyboard Arrow keys / Space anytime.</p>
             </div>
           </div>
         </div>
 
         <div class="guide-card">
-          <h3>🎮 CONTROLS & GESTURES</h3>
+          <h3>🏄 COASTAL SURF CONTROLS</h3>
           <div class="gesture-grid">
             <div class="gesture-item">
               <div class="action">Step Left / Right</div>
-              <div class="desc">Switch lanes (or ← / → keys)</div>
+              <div class="desc">Carve lanes (or ← / → keys)</div>
             </div>
             <div class="gesture-item">
               <div class="action">Vertical Jump</div>
-              <div class="desc">Leap over hurdles (or ↑ / Space)</div>
+              <div class="desc">Leap over driftwood & nets (or ↑ / Space)</div>
             </div>
             <div class="gesture-item">
-              <div class="action">Crouch / Duck</div>
-              <div class="desc">Duck under high beams (or ↓)</div>
+              <div class="action">Surf Tuck / Duck</div>
+              <div class="desc">Duck under awnings & signs (or ↓)</div>
             </div>
             <div class="gesture-item">
               <div class="action">Wrists Together</div>
-              <div class="desc">Hold 0.3s for Shield (or [H] key)</div>
+              <div class="desc">Hold 0.3s for Super-Surf Wave Shield (or [H])</div>
             </div>
             <div class="gesture-item">
               <div class="action">Speed Multiplier</div>
-              <div class="desc">[ / ] keys (0.5x to 2.5x)</div>
+              <div class="desc">[ / ] keys (0.5x mellow to 2.5x swell)</div>
             </div>
           </div>
         </div>
 
-        <div class="guide-card" style="font-size: 0.8rem; color: #aaa;">
-          <h3>⚡ PERFORMANCE & PARITY</h3>
+        <div class="guide-card" style="font-size: 0.8rem; color: #94a3b8;">
+          <h3>⚡ PURE ARCHITECTURE & PARITY</h3>
           <p>
-            Deterministic cross-language parity: Uses identical 1€ filtering and Schmitt-trigger
-            state machine as the native Python desktop controller.
+            Deterministic cross-language parity: Powered by identical 1€ filtering and Schmitt-trigger
+            state machine as the native desktop Python engine.
           </p>
         </div>
       </aside>
     </main>
 
     <footer>
-      IRLSurfer &bull; Production-Grade Computer Vision Subway Surfers Controller &bull;
+      IRLSurfer &bull; Venice Beach & Pacific Coast Highway Edition &bull;
       <a href="https://github.com" target="_blank" rel="noreferrer">Open Source GitHub Repository</a>
     </footer>
 
