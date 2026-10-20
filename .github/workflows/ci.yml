@@ -28,6 +28,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo apt-get update && sudo apt-get install -y xvfb
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
@@ -45,7 +46,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest --cov=irlsurfer --cov-report=term-missing
+          xvfb-run pytest --cov=irlsurfer --cov-report=term-missing
 
   web-ci:
     runs-on: ubuntu-latest

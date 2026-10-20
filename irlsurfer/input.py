@@ -8,19 +8,34 @@ import sys
 from abc import ABC, abstractmethod
 from typing import Any
 
-from pynput.keyboard import Controller, Key
-
 from irlsurfer.detector import GestureEvent
+
+Controller: Any
+Key: Any
+try:
+    from pynput.keyboard import Controller as _Controller
+    from pynput.keyboard import Key as _Key
+
+    Controller = _Controller
+    Key = _Key
+    _PYNPUT_AVAILABLE = True
+except (ImportError, Exception):  # pragma: no cover
+    Controller = None
+    Key = None
+    _PYNPUT_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
-GESTURE_KEY_MAP: dict[GestureEvent, Any] = {
-    GestureEvent.LANE_LEFT: Key.left,
-    GestureEvent.LANE_RIGHT: Key.right,
-    GestureEvent.JUMP: Key.up,
-    GestureEvent.DUCK: Key.down,
-    GestureEvent.HOVERBOARD: Key.space,
-}
+if _PYNPUT_AVAILABLE and Key is not None:
+    GESTURE_KEY_MAP: dict[GestureEvent, Any] = {
+        GestureEvent.LANE_LEFT: Key.left,
+        GestureEvent.LANE_RIGHT: Key.right,
+        GestureEvent.JUMP: Key.up,
+        GestureEvent.DUCK: Key.down,
+        GestureEvent.HOVERBOARD: Key.space,
+    }
+else:
+    GESTURE_KEY_MAP = {}
 
 
 class KeyBackend(ABC):
@@ -75,7 +90,14 @@ class PynputBackend(KeyBackend):
     """Key simulator backend using pynput Controller."""
 
     def __init__(self, controller: Controller | None = None) -> None:
-        self._keyboard = controller if controller is not None else Controller()
+        if controller is not None:
+            self._keyboard = controller
+        elif _PYNPUT_AVAILABLE and Controller is not None:
+            self._keyboard = Controller()
+        else:
+            raise RuntimeError(
+                "pynput Controller is not available (e.g. in headless environment without display)."
+            )
         self._mapping = GESTURE_KEY_MAP
 
     def send_gesture(self, gesture: GestureEvent) -> None:
