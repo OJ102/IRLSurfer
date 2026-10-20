@@ -1,0 +1,16 @@
+{
+  "calibration_seconds": 2.0,
+  "enter_lane_thresh": 0.6,
+  "exit_lane_thresh": 0.4,
+  "jump_dy_thresh": 0.22,
+  "jump_vel_thresh": 0.60,
+  "jump_cooldown_sec": 0.50,
+  "duck_dy_thresh": -0.22,
+  "duck_vel_thresh": -0.60,
+  "duck_cooldown_sec": 0.50,
+  "hoverboard_dist_thresh": 0.45,
+  "hoverboard_hold_sec": 0.30,
+  "hoverboard_cooldown_sec": 3.0,
+  "recenter_alpha": 0.05,
+  "min_visibility": 0.50
+}
