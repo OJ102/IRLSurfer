@@ -3,33 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IRLSurfer - California Beach Surfer</title>
-    <!-- Modern California Coastal Typography -->
+    <title>IRLSurfer - California Beach Arcade Runner</title>
+    <!-- California Beach Arcade Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./src/style.css" />
   </head>
   <body>
-    <header>
+    <header class="arcade-header">
       <div class="brand">
         <div class="brand-icon" aria-hidden="true">🏄</div>
         <div class="brand-titles">
-          <h1>IRLSurfer</h1>
+          <h1>IRL SURFER</h1>
           <span class="subbrand">PACIFIC COAST HIGHWAY &bull; SANTA MONICA PIER</span>
         </div>
-        <span class="badge">CALIFORNIA COASTAL</span>
+        <span class="badge">CALIFORNIA COAST</span>
       </div>
 
-      <div class="privacy-notice" title="Privacy Guaranteed: On-Device Vision Only">
-        <svg class="privacy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          <path d="m9 12 2 2 4-4" />
-        </svg>
-        <span>100% on-device vision inference via WebAssembly. No video is ever sent to a server.</span>
+      <div class="header-nav">
+        <a href="https://github.com" target="_blank" rel="noreferrer" class="arcade-header-link" title="Open Source GitHub Repository">
+          <svg class="header-svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+        <button id="btnHeaderHelp" class="arcade-header-btn" title="Open Controls &amp; Hotkeys Guide [?]">
+          <span class="header-icon">🕹️</span>
+          <span>Help &amp; Keys</span>
+          <kbd class="kbd-badge">?</kbd>
+        </button>
       </div>
     </header>
 
@@ -39,18 +45,18 @@
         <nav id="commandDock" class="command-dock" aria-label="Game Command Dock">
           <!-- Cluster 1: Core Action Controls -->
           <div class="dock-cluster dock-cluster-actions" role="group" aria-label="Game Actions">
-            <button id="btnPause" class="btn btn-dock" title="Toggle pause [P]" aria-label="Toggle pause (Shortcut: P)">
+            <button id="btnPause" class="btn btn-dock btn-dock-action" title="Toggle pause [P]" aria-label="Toggle pause (Shortcut: P)">
               <span class="btn-dot"></span>
               <span class="btn-icon">⏸️</span>
               <span class="btn-label">Pause</span>
               <kbd class="kbd-badge">P</kbd>
             </button>
-            <button id="btnRestart" class="btn btn-dock" title="Quick restart game [R]" aria-label="Quick restart game (Shortcut: R)">
+            <button id="btnRestart" class="btn btn-dock btn-dock-action" title="Quick restart game [R]" aria-label="Quick restart game (Shortcut: R)">
               <span class="btn-icon">↺</span>
               <span class="btn-label">Restart</span>
               <kbd class="kbd-badge">R</kbd>
             </button>
-            <button id="btnMute" class="btn btn-dock btn-mute" title="Toggle audio mute [M]" aria-label="Toggle audio mute (Shortcut: M)">
+            <button id="btnMute" class="btn btn-dock btn-dock-action btn-mute" title="Toggle audio mute [M]" aria-label="Toggle audio mute (Shortcut: M)">
               <span id="muteIcon" class="btn-icon">🔊</span>
               <kbd class="kbd-badge">M</kbd>
             </button>
@@ -106,8 +112,8 @@
               <span class="badge-icon">⌨️</span>
               <span class="badge-text">Keyboard Mode</span>
             </div>
-            <button id="btnRecalibrate" class="btn btn-dock" title="Recalibrate standing baseline [C]" aria-label="Recalibrate standing baseline (Shortcut: C)">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <button id="btnRecalibrate" class="btn btn-dock btn-recalibrate" title="Recalibrate standing baseline [C]" aria-label="Recalibrate standing baseline (Shortcut: C)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                 <path d="M3 3v5h5"/>
                 <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
@@ -130,11 +136,12 @@
       </section>
 
       <aside class="sidebar">
-        <div class="camera-card">
+        <!-- Streamer Motion Tracker PIP -->
+        <div class="camera-card streamer-pip">
           <div class="camera-header">
             <div class="camera-title-wrap">
               <span class="camera-pulse-dot"></span>
-              <span>VISION POSE TRACKER</span>
+              <span class="tracker-title">STREAMER PIP &bull; MOTION SENSOR</span>
             </div>
             <span id="cameraFps">-- FPS</span>
           </div>
@@ -142,11 +149,14 @@
             <video id="webcamVideo" playsinline autoplay muted width="640" height="480"></video>
             <canvas id="hudCanvas" width="640" height="480"></canvas>
             <div id="cameraPrompt" class="camera-overlay-prompt">
-              <div class="prompt-icon">🌊</div>
-              <p class="prompt-title">Catch California Waves with Body Motion</p>
-              <p class="prompt-subtitle">Real-time AI body tracking inside your browser.</p>
-              <button id="btnEnableCam" class="btn btn-primary">Enable Webcam Surfer</button>
-              <p class="prompt-subtext">Zero setup required &bull; Or use Arrow Keys / Space anytime</p>
+              <div class="prompt-icon">🏄</div>
+              <p class="prompt-title">PLAY WITH MOTION</p>
+              <p class="prompt-subtitle">Real-time full body tracking inside your browser.</p>
+              <button id="btnEnableCam" class="btn btn-arcade-action btn-enable-webcam">
+                <span class="btn-icon">📹</span>
+                <span>ENABLE WEBCAM</span>
+              </button>
+              <p class="prompt-subtext">Zero setup required &bull; Or use Arrow Keys / Space</p>
             </div>
           </div>
         </div>
@@ -154,10 +164,10 @@
         <div class="guide-card sidebar-guide-card">
           <div class="guide-card-header">
             <h3>
-              <span class="card-icon">🏄</span>
-              <span>QUICK CONTROLS &amp; STANCE</span>
+              <span class="card-icon">🎮</span>
+              <span>HOW TO PLAY</span>
             </h3>
-            <button id="btnOpenDrawerSidebar" class="btn-sidebar-drawer" title="Open Full Guide [?]">View All [?]</button>
+            <button id="btnOpenDrawerSidebar" class="btn-sidebar-drawer" title="Open Full Guide [?]">All Keys [?]</button>
           </div>
           <div class="gesture-grid">
             <div class="gesture-item">
@@ -177,17 +187,6 @@
               <div class="desc">Hold 0.3s for Shield (or [H])</div>
             </div>
           </div>
-        </div>
-
-        <div class="guide-card architecture-card">
-          <h3>
-            <span class="card-icon">⚡</span>
-            <span>DETERMINISTIC PIPELINE &amp; PARITY</span>
-          </h3>
-          <p>
-            Shared cross-language architecture: 1&euro; adaptive filtering and Schmitt-trigger
-            state machine deliver 100% parity with the native Python vision engine.
-          </p>
         </div>
       </aside>
     </main>
@@ -293,11 +292,30 @@
             <li><strong>Baseline Calibration:</strong> Press <kbd class="kbd-badge">C</kbd> while standing centered and upright. Hold your neutral stance steady during the 2-second calibration sweep.</li>
           </ul>
         </section>
+
+        <section class="drawer-section">
+          <h3>
+            <span class="section-icon">🔒</span>
+            <span>Privacy &amp; Technology</span>
+          </h3>
+          <div class="drawer-privacy-box">
+            <div class="privacy-status-pill">
+              <span class="privacy-dot"></span>
+              <strong>100% On-Device WebAssembly Inference</strong>
+            </div>
+            <p class="privacy-desc">
+              IRLSurfer computes all pose tracking directly in your browser via WebAssembly. Zero video frames or webcam feeds are ever streamed, uploaded, or stored on remote servers.
+            </p>
+            <p class="privacy-subdesc">
+              Deterministic 1&euro; adaptive filtering and Schmitt-trigger state machine guarantee exact parity with native vision engines.
+            </p>
+          </div>
+        </section>
       </div>
     </aside>
 
-    <footer>
-      <span>IRLSurfer &bull; Santa Monica &amp; Pacific Coast Highway Edition</span>
+    <footer class="arcade-footer">
+      <span>IRL SURFER &bull; Santa Monica &amp; Pacific Coast Highway Edition</span>
       <span class="footer-divider">&bull;</span>
       <a href="https://github.com" target="_blank" rel="noreferrer">Open Source GitHub Repository</a>
     </footer>

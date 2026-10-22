@@ -35,6 +35,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const drawerBackdrop = document.getElementById('drawerBackdrop') as HTMLDivElement | null;
   const btnToggleDrawer = document.getElementById('btnToggleDrawer') as HTMLButtonElement | null;
   const btnOpenDrawerSidebar = document.getElementById('btnOpenDrawerSidebar') as HTMLButtonElement | null;
+  const btnHeaderHelp = document.getElementById('btnHeaderHelp') as HTMLButtonElement | null;
   const drawerClose = document.getElementById('drawerClose') as HTMLButtonElement | null;
 
   // Initialize Game Runner
@@ -76,6 +77,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   btnToggleDrawer?.addEventListener('click', toggleDrawer);
   btnOpenDrawerSidebar?.addEventListener('click', openDrawer);
+  btnHeaderHelp?.addEventListener('click', openDrawer);
   drawerClose?.addEventListener('click', closeDrawer);
   drawerBackdrop?.addEventListener('click', closeDrawer);
 
