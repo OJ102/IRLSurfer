@@ -31,62 +31,102 @@
         </svg>
         <span>100% on-device vision inference via WebAssembly. No video is ever sent to a server.</span>
       </div>
-
-      <div class="toolbar">
-        <div class="mode-toggle" role="group" aria-label="Input Mode Switcher">
-          <button id="btnModeKeyboard" class="active" title="Play with keyboard arrow keys">
-            <span class="btn-icon">⌨️</span> Keyboard
-          </button>
-          <button id="btnModeWebcam" title="Play with webcam motion controller">
-            <span class="btn-icon">📹</span> Webcam Controller
-          </button>
-        </div>
-
-        <div class="speed-controller" title="Game Speed Controller [[ / ]]">
-          <div class="speed-header">
-            <span class="speed-label">PACIFIC CRUISE</span>
-            <span id="speedValue" class="speed-badge">1.0x</span>
-          </div>
-          <input
-            type="range"
-            id="speedSlider"
-            class="speed-slider"
-            min="0.5"
-            max="2.5"
-            step="0.05"
-            value="1.0"
-            aria-label="Speed Multiplier Slider"
-            title="Drag to change cruise speed (0.5x - 2.5x)"
-          />
-          <div class="speed-presets">
-            <button class="speed-preset-btn" data-speed="0.5" title="Warmup cruise (0.5x)">0.5x Mellow</button>
-            <button class="speed-preset-btn active" data-speed="1.0" title="Normal cruise (1.0x)">1.0x Coast</button>
-            <button class="speed-preset-btn" data-speed="1.5" title="Breeze cruise (1.5x)">1.5x Breeze</button>
-            <button class="speed-preset-btn" data-speed="2.0" title="Wild swell (2.0x)">2.0x Swell</button>
-          </div>
-        </div>
-
-        <div class="action-buttons">
-          <button id="btnMute" class="btn btn-icon-only" title="Toggle audio mute [M]" aria-label="Toggle audio mute">🔊</button>
-          <button id="btnPause" class="btn" title="Toggle pause [P]">
-            <span class="btn-dot"></span>Pause
-          </button>
-          <button id="btnRecalibrate" class="btn" title="Recalibrate standing baseline [C]">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-              <path d="M3 3v5h5"/>
-              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
-              <path d="M16 21h5v-5"/>
-            </svg>
-            Recalibrate
-          </button>
-        </div>
-      </div>
     </header>
 
     <main>
       <section class="game-container">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <nav id="commandDock" class="command-dock" aria-label="Game Command Dock">
+          <!-- Cluster 1: Core Action Controls -->
+          <div class="dock-cluster dock-cluster-actions" role="group" aria-label="Game Actions">
+            <button id="btnPause" class="btn btn-dock" title="Toggle pause [P]" aria-label="Toggle pause (Shortcut: P)">
+              <span class="btn-dot"></span>
+              <span class="btn-icon">⏸️</span>
+              <span class="btn-label">Pause</span>
+              <kbd class="kbd-badge">P</kbd>
+            </button>
+            <button id="btnRestart" class="btn btn-dock" title="Quick restart game [R]" aria-label="Quick restart game (Shortcut: R)">
+              <span class="btn-icon">↺</span>
+              <span class="btn-label">Restart</span>
+              <kbd class="kbd-badge">R</kbd>
+            </button>
+            <button id="btnMute" class="btn btn-dock btn-mute" title="Toggle audio mute [M]" aria-label="Toggle audio mute (Shortcut: M)">
+              <span id="muteIcon" class="btn-icon">🔊</span>
+              <kbd class="kbd-badge">M</kbd>
+            </button>
+          </div>
+
+          <!-- Cluster 2: Input Mode Switcher -->
+          <div class="dock-cluster dock-cluster-mode mode-toggle" role="group" aria-label="Input Mode Switcher">
+            <button id="btnModeKeyboard" class="active" title="Play with keyboard arrow keys [1]" aria-label="Switch to keyboard controls (Shortcut: 1)">
+              <span class="btn-icon">⌨️</span>
+              <span class="btn-label">Keys</span>
+              <kbd class="kbd-badge">1</kbd>
+            </button>
+            <button id="btnModeWebcam" title="Play with webcam motion controller [2]" aria-label="Switch to webcam controller (Shortcut: 2)">
+              <span class="btn-icon">📹</span>
+              <span class="btn-label">Webcam</span>
+              <kbd class="kbd-badge">2</kbd>
+            </button>
+          </div>
+
+          <!-- Cluster 3: Centralized Speed & Cruise Control -->
+          <div class="dock-cluster dock-cluster-speed speed-controller" role="group" aria-label="Cruise Speed Controller">
+            <button id="btnSpeedDown" class="btn btn-dock btn-stepper" title="Step speed down (-0.25x) [[]" aria-label="Decrease speed (Shortcut: [)">
+              <span class="btn-icon">−</span>
+              <kbd class="kbd-badge">[</kbd>
+            </button>
+            <span id="speedValue" class="speed-badge" title="Current Cruise Speed">1.0x</span>
+            <button id="btnSpeedUp" class="btn btn-dock btn-stepper" title="Step speed up (+0.25x) []]" aria-label="Increase speed (Shortcut: ])">
+              <span class="btn-icon">+</span>
+              <kbd class="kbd-badge">]</kbd>
+            </button>
+            <input
+              type="range"
+              id="speedSlider"
+              class="speed-slider"
+              min="0.5"
+              max="2.5"
+              step="0.05"
+              value="1.0"
+              aria-label="Speed Multiplier Slider"
+              title="Drag to adjust cruise speed (0.5x - 2.5x)"
+            />
+            <div class="speed-presets">
+              <button class="speed-preset-btn" data-speed="0.5" title="Warmup cruise (0.5x)">0.5x</button>
+              <button class="speed-preset-btn active" data-speed="1.0" title="Normal coast (1.0x)">1.0x</button>
+              <button class="speed-preset-btn" data-speed="1.5" title="Breeze cruise (1.5x)">1.5x</button>
+              <button class="speed-preset-btn" data-speed="2.0" title="Wild swell (2.0x)">2.0x</button>
+            </div>
+          </div>
+
+          <!-- Cluster 4: Web Vision Center -->
+          <div class="dock-cluster dock-cluster-vision" role="group" aria-label="Vision Guidance Center">
+            <div id="visionDistanceBadge" class="vision-distance-badge status-standby" title="Vision Distance Guidance Status">
+              <span class="badge-icon">⌨️</span>
+              <span class="badge-text">Keyboard Mode</span>
+            </div>
+            <button id="btnRecalibrate" class="btn btn-dock" title="Recalibrate standing baseline [C]" aria-label="Recalibrate standing baseline (Shortcut: C)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+                <path d="M16 21h5v-5"/>
+              </svg>
+              <span class="btn-label">Recalibrate</span>
+              <kbd class="kbd-badge">C</kbd>
+            </button>
+          </div>
+
+          <!-- Cluster 5: Quick-Access Slide-out Controls Drawer -->
+          <div class="dock-cluster dock-cluster-drawer">
+            <button id="btnToggleDrawer" class="btn btn-dock btn-drawer-toggle" title="Toggle Controls &amp; Keys Guide [?]" aria-label="Toggle Controls &amp; Keys Guide (Shortcut: ?)" aria-expanded="false" aria-controls="controlsDrawer">
+              <span class="btn-icon">⚙️</span>
+              <span class="btn-label">Keys</span>
+              <kbd class="kbd-badge">?</kbd>
+            </button>
+          </div>
+        </nav>
       </section>
 
       <aside class="sidebar">
@@ -111,11 +151,14 @@
           </div>
         </div>
 
-        <div class="guide-card">
-          <h3>
-            <span class="card-icon">🏄</span>
-            <span>COASTAL SURF CONTROLS</span>
-          </h3>
+        <div class="guide-card sidebar-guide-card">
+          <div class="guide-card-header">
+            <h3>
+              <span class="card-icon">🏄</span>
+              <span>QUICK CONTROLS &amp; STANCE</span>
+            </h3>
+            <button id="btnOpenDrawerSidebar" class="btn-sidebar-drawer" title="Open Full Guide [?]">View All [?]</button>
+          </div>
           <div class="gesture-grid">
             <div class="gesture-item">
               <div class="action">Step Left / Right</div>
@@ -123,19 +166,15 @@
             </div>
             <div class="gesture-item">
               <div class="action">Vertical Jump</div>
-              <div class="desc">Leap over driftwood &amp; nets (or &uarr; / Space)</div>
+              <div class="desc">Leap over driftwood (or Space)</div>
             </div>
             <div class="gesture-item">
               <div class="action">Surf Tuck / Duck</div>
-              <div class="desc">Duck under awnings &amp; signs (or &darr;)</div>
+              <div class="desc">Duck under awnings (or &darr;)</div>
             </div>
             <div class="gesture-item">
               <div class="action">Wrists Together</div>
-              <div class="desc">Hold 0.3s for Wave Shield (or [H])</div>
-            </div>
-            <div class="gesture-item full-width">
-              <div class="action">Pacific Cruise Multiplier</div>
-              <div class="desc">[ / ] keys &bull; 0.5x mellow warmup to 2.5x wild swell</div>
+              <div class="desc">Hold 0.3s for Shield (or [H])</div>
             </div>
           </div>
         </div>
@@ -152,6 +191,110 @@
         </div>
       </aside>
     </main>
+
+    <!-- Slide-out Controls & Hotkeys Drawer Backdrop & Overlay -->
+    <div id="drawerBackdrop" class="drawer-backdrop" aria-hidden="true"></div>
+    <aside id="controlsDrawer" class="controls-drawer" aria-label="Controls and Stance Guide" aria-hidden="true">
+      <div class="drawer-header">
+        <div class="drawer-title-group">
+          <span class="drawer-icon">🏄</span>
+          <h2>Controls &amp; Hotkeys Hub</h2>
+        </div>
+        <button id="drawerClose" class="btn-drawer-close" aria-label="Close Controls Drawer" title="Close Drawer [Esc]">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <section class="drawer-section">
+          <h3>
+            <span class="section-icon">🌊</span>
+            <span>Motion Gestures (Webcam Mode)</span>
+          </h3>
+          <div class="drawer-gesture-grid">
+            <div class="drawer-gesture-item">
+              <span class="gesture-title">Step Left / Right</span>
+              <span class="gesture-desc">Carve lanes smoothly across California waves</span>
+            </div>
+            <div class="drawer-gesture-item">
+              <span class="gesture-title">Vertical Jump</span>
+              <span class="gesture-desc">Leap over driftwood, sand piles &amp; nets</span>
+            </div>
+            <div class="drawer-gesture-item">
+              <span class="gesture-title">Surf Tuck / Duck</span>
+              <span class="gesture-desc">Duck under pier railings &amp; beach awnings</span>
+            </div>
+            <div class="drawer-gesture-item">
+              <span class="gesture-title">Wrists Together</span>
+              <span class="gesture-desc">Hold wrists together 0.3s for Wave Shield</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="drawer-section">
+          <h3>
+            <span class="section-icon">⌨️</span>
+            <span>Master Keyboard Hotkeys</span>
+          </h3>
+          <div class="hotkeys-list">
+            <div class="hotkey-row">
+              <div class="hotkey-keys"><kbd class="kbd-badge">P</kbd></div>
+              <div class="hotkey-action">Pause or resume gameplay session</div>
+            </div>
+            <div class="hotkey-row">
+              <div class="hotkey-keys"><kbd class="kbd-badge">R</kbd></div>
+              <div class="hotkey-action">Instant session restart</div>
+            </div>
+            <div class="hotkey-row">
+              <div class="hotkey-keys"><kbd class="kbd-badge">M</kbd></div>
+              <div class="hotkey-action">Toggle audio sound effects mute/unmute</div>
+            </div>
+            <div class="hotkey-row">
+              <div class="hotkey-keys"><kbd class="kbd-badge">1</kbd> &bull; <kbd class="kbd-badge">2</kbd></div>
+              <div class="hotkey-action">Switch input mode: [1] Keyboard &bull; [2] Webcam</div>
+            </div>
+            <div class="hotkey-row">
+              <div class="hotkey-keys"><kbd class="kbd-badge">[</kbd> &bull; <kbd class="kbd-badge">]</kbd></div>
+              <div class="hotkey-action">Pacific cruise speed: [-] 0.25x / [+] 0.25x</div>
+            </div>
+            <div class="hotkey-row">
+              <div class="hotkey-keys"><kbd class="kbd-badge">C</kbd></div>
+              <div class="hotkey-action">Recalibrate standing pose baseline</div>
+            </div>
+            <div class="hotkey-row">
+              <div class="hotkey-keys"><kbd class="kbd-badge">?</kbd> / <kbd class="kbd-badge">/</kbd></div>
+              <div class="hotkey-action">Toggle this Controls &amp; Hotkeys Drawer</div>
+            </div>
+            <div class="hotkey-row">
+              <div class="hotkey-keys"><kbd class="kbd-badge">Esc</kbd></div>
+              <div class="hotkey-action">Dismiss &amp; close this drawer</div>
+            </div>
+            <div class="hotkey-row">
+              <div class="hotkey-keys"><kbd class="kbd-badge">&larr;</kbd> <kbd class="kbd-badge">&rarr;</kbd> / <kbd class="kbd-badge">A</kbd> <kbd class="kbd-badge">D</kbd></div>
+              <div class="hotkey-action">Steer and carve left / right lanes</div>
+            </div>
+            <div class="hotkey-row">
+              <div class="hotkey-keys"><kbd class="kbd-badge">&uarr;</kbd> / <kbd class="kbd-badge">W</kbd> / <kbd class="kbd-badge">Space</kbd></div>
+              <div class="hotkey-action">Jump over obstacles (or restart on crash)</div>
+            </div>
+            <div class="hotkey-row">
+              <div class="hotkey-keys"><kbd class="kbd-badge">&darr;</kbd> / <kbd class="kbd-badge">S</kbd></div>
+              <div class="hotkey-action">Duck under elevated obstacles</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="drawer-section">
+          <h3>
+            <span class="section-icon">📏</span>
+            <span>Stance &amp; Calibration Tips</span>
+          </h3>
+          <ul class="stance-tips-list">
+            <li><strong>Optimal Distance:</strong> Position yourself 1.5 - 2.5m (5 - 8 ft) from your webcam so your torso from head to hips is cleanly framed. Look at the <span class="text-emerald">Distance OK</span> badge on the dock.</li>
+            <li><strong>Lighting:</strong> Ensure front lighting illuminates your upper body. Avoid strong background sunlight or lamps directly behind you.</li>
+            <li><strong>Baseline Calibration:</strong> Press <kbd class="kbd-badge">C</kbd> while standing centered and upright. Hold your neutral stance steady during the 2-second calibration sweep.</li>
+          </ul>
+        </section>
+      </div>
+    </aside>
 
     <footer>
       <span>IRLSurfer &bull; Santa Monica &amp; Pacific Coast Highway Edition</span>

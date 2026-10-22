@@ -87,7 +87,53 @@ class DebugHUD:
         if paused:
             self._render_pause_overlay(out, w, h)
 
+        # 7. Unified single-line footer command bar across bottom edge
+        self._render_command_bar(out, detector, paused, w, h)
+
         return out
+
+    def _render_command_bar(
+        self,
+        img: np.ndarray[Any, Any],
+        detector: GestureDetector,
+        paused: bool,
+        w: int,
+        h: int,
+    ) -> None:
+        bar_h = 32
+        if h <= bar_h or w <= 0:
+            return
+
+        y_top = h - bar_h
+
+        # Translucent charcoal bar ((18, 22, 28)) with alpha 0.82
+        overlay = img.copy()
+        cv2.rectangle(overlay, (0, y_top), (w, h), (18, 22, 28), -1)
+        # Top border line
+        cv2.line(overlay, (0, y_top), (w, y_top), (90, 70, 50), 1)
+        cv2.addWeighted(overlay, 0.82, img, 0.18, 0, img)
+
+        pause_label = "[P] Resume" if paused else "[P] Pause"
+        speed_str = f"{detector.speed_multiplier:.1f}x"
+        cmd_text = f"{pause_label} | [C] Recalibrate | [-/+] Speed ({speed_str}) | [Q] Quit"
+
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.44 if w >= 550 else (0.35 if w >= 400 else 0.28)
+        thickness = 1
+        (tw, th), _ = cv2.getTextSize(cmd_text, font, font_scale, thickness)
+        text_x = max(8, (w - tw) // 2)
+        text_y = y_top + (bar_h + th) // 2
+
+        cv2.putText(
+            img,
+            cmd_text,
+            (text_x, text_y),
+            font,
+            font_scale,
+            (220, 230, 240),
+            thickness,
+            cv2.LINE_AA,
+        )
 
     def _render_lane_guidelines(
         self,
@@ -111,20 +157,21 @@ class DebugHUD:
         overlay = img.copy()
 
         y_top = min(45, max(0, h - 1))
-        y_bottom = max(y_top, h - 35)
+        y_bottom = max(y_top, h - 40)
 
         # Vertical lane divider lines
         cv2.line(overlay, (left_bound, y_top), (left_bound, y_bottom), (200, 200, 200), 1)
         cv2.line(overlay, (right_bound, y_top), (right_bound, y_bottom), (200, 200, 200), 1)
         cv2.line(overlay, (center_x, y_top), (center_x, y_bottom), (100, 100, 100), 1)
 
-        # Lane text indicators at bottom
+        # Lane text indicators at bottom (above footer command bar)
+        lane_text_y = max(y_top + 15, h - 38)
         cv2.putText(
             overlay,
             "LEFT",
-            (max(10, left_bound // 2 - 20), h - 15),
+            (max(10, left_bound // 2 - 20), lane_text_y),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
+            0.45,
             (180, 180, 180),
             1,
             cv2.LINE_AA,
@@ -132,9 +179,9 @@ class DebugHUD:
         cv2.putText(
             overlay,
             "CENTER",
-            (max(10, (left_bound + right_bound) // 2 - 30), h - 15),
+            (max(10, (left_bound + right_bound) // 2 - 30), lane_text_y),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
+            0.45,
             (180, 180, 180),
             1,
             cv2.LINE_AA,
@@ -142,9 +189,9 @@ class DebugHUD:
         cv2.putText(
             overlay,
             "RIGHT",
-            (min(w - 60, (right_bound + w) // 2 - 25), h - 15),
+            (min(w - 60, (right_bound + w) // 2 - 25), lane_text_y),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
+            0.45,
             (180, 180, 180),
             1,
             cv2.LINE_AA,

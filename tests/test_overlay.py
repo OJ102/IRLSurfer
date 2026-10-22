@@ -289,3 +289,71 @@ def test_debug_hud_speed_multiplier_badge() -> None:
     # The header area (top 42 rows) should differ when speed badge text changes from 1.0x to 2.0x
     header_diff = np.abs(out_1x[:42, :].astype(int) - out_2x[:42, :].astype(int))
     assert np.sum(header_diff) > 0
+
+
+def test_debug_hud_footer_command_bar() -> None:
+    hud = DebugHUD(mirror=True)
+    img = np.zeros((480, 640, 3), dtype=np.uint8)
+
+    detector = GestureDetector(GestureConfig(calibration_seconds=0.01))
+    detector.process_frame(_make_sample_frame(0.0))
+    detector.process_frame(_make_sample_frame(0.1))
+
+    # Active render
+    out_active = hud.render(
+        image_bgr=img,
+        frame_data=_make_sample_frame(0.2),
+        detector=detector,
+        fps=30.0,
+        latency_ms=10.0,
+        is_paused=False,
+    )
+    # Check bottom 32 rows are rendered (non-zero)
+    assert np.any(out_active[-32:, :] > 0)
+    # Ensure source image was not mutated
+    assert img.sum() == 0
+
+    # Paused render
+    out_paused = hud.render(
+        image_bgr=img,
+        frame_data=_make_sample_frame(0.2),
+        detector=detector,
+        fps=30.0,
+        latency_ms=10.0,
+        is_paused=True,
+    )
+    assert np.any(out_paused[-32:, :] > 0)
+
+    # Difference between active and paused footer (due to "[P] Pause" vs "[P] Resume")
+    footer_diff_pause = np.abs(out_active[-32:, :].astype(int) - out_paused[-32:, :].astype(int))
+    assert np.sum(footer_diff_pause) > 0
+
+    # Test footer reflects speed multiplier changes
+    detector_2x = GestureDetector(GestureConfig(calibration_seconds=0.01))
+    detector_2x.process_frame(_make_sample_frame(0.0))
+    detector_2x.process_frame(_make_sample_frame(0.1))
+    detector_2x.set_speed_multiplier(2.0)
+
+    out_speed2x = hud.render(
+        image_bgr=img,
+        frame_data=_make_sample_frame(0.2),
+        detector=detector_2x,
+        fps=30.0,
+        latency_ms=10.0,
+        is_paused=False,
+    )
+    footer_diff_speed = np.abs(out_active[-32:, :].astype(int) - out_speed2x[-32:, :].astype(int))
+    assert np.sum(footer_diff_speed) > 0
+
+    # Verify rendering across multiple resolutions
+    for h, w in [(200, 300), (720, 1280), (1080, 1920)]:
+        test_img = np.zeros((h, w, 3), dtype=np.uint8)
+        rendered = hud.render(test_img, None, detector, 30.0, 10.0)
+        assert rendered.shape == (h, w, 3)
+        assert np.any(rendered[-32:, :] > 0)
+
+    # Very small resolution (h <= 32) should gracefully skip footer without crashing
+    tiny_img = np.zeros((24, 40, 3), dtype=np.uint8)
+    rendered_tiny = hud.render(tiny_img, None, detector, 30.0, 10.0)
+    assert rendered_tiny.shape == (24, 40, 3)
+

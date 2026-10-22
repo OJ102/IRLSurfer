@@ -4,7 +4,7 @@
  * camera HUD, and HTML5 Canvas arcade runner.
  */
 
-import { GestureDetector, DetectorState, GestureEvent } from './detector';
+import { GestureDetector, DistanceStatus, GestureEvent } from './detector';
 import { GameRunner } from './game';
 import { CameraHUD } from './hud';
 import { PoseTracker } from './pose';
@@ -19,13 +19,23 @@ window.addEventListener('DOMContentLoaded', async () => {
   const btnEnableCam = document.getElementById('btnEnableCam') as HTMLButtonElement;
   const btnMute = document.getElementById('btnMute') as HTMLButtonElement | null;
   const btnPause = document.getElementById('btnPause') as HTMLButtonElement;
+  const btnRestart = document.getElementById('btnRestart') as HTMLButtonElement | null;
   const btnRecalibrate = document.getElementById('btnRecalibrate') as HTMLButtonElement;
   const cameraPrompt = document.getElementById('cameraPrompt') as HTMLDivElement;
   const cameraFps = document.getElementById('cameraFps') as HTMLSpanElement;
 
+  const btnSpeedDown = document.getElementById('btnSpeedDown') as HTMLButtonElement | null;
+  const btnSpeedUp = document.getElementById('btnSpeedUp') as HTMLButtonElement | null;
   const speedSlider = document.getElementById('speedSlider') as HTMLInputElement | null;
   const speedValue = document.getElementById('speedValue') as HTMLSpanElement | null;
   const speedPresetBtns = document.querySelectorAll<HTMLButtonElement>('.speed-preset-btn');
+
+  const visionDistanceBadge = document.getElementById('visionDistanceBadge') as HTMLDivElement | null;
+  const controlsDrawer = document.getElementById('controlsDrawer') as HTMLElement | null;
+  const drawerBackdrop = document.getElementById('drawerBackdrop') as HTMLDivElement | null;
+  const btnToggleDrawer = document.getElementById('btnToggleDrawer') as HTMLButtonElement | null;
+  const btnOpenDrawerSidebar = document.getElementById('btnOpenDrawerSidebar') as HTMLButtonElement | null;
+  const drawerClose = document.getElementById('drawerClose') as HTMLButtonElement | null;
 
   // Initialize Game Runner
   const game = new GameRunner(gameCanvas);
@@ -39,12 +49,80 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Mode defaults to keyboard on startup: isolate input detector
   detector.pause();
 
+  // Slide-out Controls Drawer logic
+  function openDrawer(): void {
+    if (!controlsDrawer) return;
+    controlsDrawer.classList.add('open');
+    drawerBackdrop?.classList.add('open');
+    btnToggleDrawer?.setAttribute('aria-expanded', 'true');
+    controlsDrawer.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeDrawer(): void {
+    if (!controlsDrawer) return;
+    controlsDrawer.classList.remove('open');
+    drawerBackdrop?.classList.remove('open');
+    btnToggleDrawer?.setAttribute('aria-expanded', 'false');
+    controlsDrawer.setAttribute('aria-hidden', 'true');
+  }
+
+  function toggleDrawer(): void {
+    if (controlsDrawer?.classList.contains('open')) {
+      closeDrawer();
+    } else {
+      openDrawer();
+    }
+  }
+
+  btnToggleDrawer?.addEventListener('click', toggleDrawer);
+  btnOpenDrawerSidebar?.addEventListener('click', openDrawer);
+  drawerClose?.addEventListener('click', closeDrawer);
+  drawerBackdrop?.addEventListener('click', closeDrawer);
+
+  // Pause / Resume toggle button and status
+  function updatePauseButton(): void {
+    if (!btnPause) return;
+    const isPaused = game.state.isPaused;
+    if (isPaused) {
+      btnPause.innerHTML = '<span class="btn-dot paused"></span><span class="btn-icon">▶️</span><span class="btn-label">Resume</span><kbd class="kbd-badge">P</kbd>';
+      btnPause.title = 'Resume game [P]';
+      btnPause.setAttribute('aria-label', 'Resume game (Shortcut: P)');
+      btnPause.classList.add('paused');
+    } else {
+      btnPause.innerHTML = '<span class="btn-dot"></span><span class="btn-icon">⏸️</span><span class="btn-label">Pause</span><kbd class="kbd-badge">P</kbd>';
+      btnPause.title = 'Pause game [P]';
+      btnPause.setAttribute('aria-label', 'Pause game (Shortcut: P)');
+      btnPause.classList.remove('paused');
+    }
+  }
+
+  function togglePause(): void {
+    const nextPaused = !game.state.isPaused;
+    game.state.isPaused = nextPaused;
+    if (nextPaused) {
+      detector.pause();
+    } else {
+      if (btnModeWebcam.classList.contains('active')) {
+        detector.resume();
+      }
+    }
+    updatePauseButton();
+  }
+
+  btnPause.addEventListener('click', togglePause);
+
   // Fix replay lane de-sync: reset detector lane state on game restart
   game.onRestart = () => {
     if (detector) {
       detector.resetLane();
     }
+    updatePauseButton();
   };
+
+  btnRestart?.addEventListener('click', () => {
+    game.restart();
+    updatePauseButton();
+  });
 
   // Web Audio autoplay unlock on first user interaction
   const unlockAudio = () => {
@@ -57,9 +135,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Audio mute toggle button
   function updateMuteButton(): void {
     if (btnMute) {
-      btnMute.textContent = game.isMuted ? '🔇' : '🔊';
+      const icon = game.isMuted ? '🔇' : '🔊';
+      btnMute.innerHTML = `<span class="btn-icon">${icon}</span><kbd class="kbd-badge">M</kbd>`;
       btnMute.title = game.isMuted ? 'Unmute audio [M]' : 'Mute audio [M]';
-      btnMute.setAttribute('aria-label', game.isMuted ? 'Unmute audio' : 'Mute audio');
+      btnMute.setAttribute('aria-label', game.isMuted ? 'Unmute audio (Shortcut: M)' : 'Mute audio (Shortcut: M)');
     }
   }
 
@@ -93,6 +172,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  btnSpeedDown?.addEventListener('click', () => {
+    applySpeed(game.speedMultiplier - 0.25, true);
+  });
+
+  btnSpeedUp?.addEventListener('click', () => {
+    applySpeed(game.speedMultiplier + 0.25, true);
+  });
+
   if (speedSlider) {
     speedSlider.addEventListener('input', () => {
       const val = parseFloat(speedSlider.value);
@@ -107,6 +194,37 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  // Vision distance status badge updater
+  function updateDistanceBadge(): void {
+    if (!visionDistanceBadge) return;
+    if (btnModeKeyboard.classList.contains('active')) {
+      visionDistanceBadge.className = 'vision-distance-badge status-standby';
+      visionDistanceBadge.innerHTML = '<span class="badge-icon">⌨️</span><span class="badge-text">Keyboard Mode</span>';
+      return;
+    }
+
+    const status = detector.lastDistanceStatus;
+    switch (status) {
+      case DistanceStatus.OPTIMAL:
+        visionDistanceBadge.className = 'vision-distance-badge status-optimal';
+        visionDistanceBadge.innerHTML = '<span class="badge-icon">✓</span><span class="badge-text">Distance OK</span>';
+        break;
+      case DistanceStatus.TOO_CLOSE:
+        visionDistanceBadge.className = 'vision-distance-badge status-close';
+        visionDistanceBadge.innerHTML = '<span class="badge-icon">⚠️</span><span class="badge-text">Step Back</span>';
+        break;
+      case DistanceStatus.TOO_FAR:
+        visionDistanceBadge.className = 'vision-distance-badge status-far';
+        visionDistanceBadge.innerHTML = '<span class="badge-icon">⚠️</span><span class="badge-text">Step Closer</span>';
+        break;
+      case DistanceStatus.UNKNOWN:
+      default:
+        visionDistanceBadge.className = 'vision-distance-badge status-unknown';
+        visionDistanceBadge.innerHTML = '<span class="badge-icon">🔍</span><span class="badge-text">Searching Person</span>';
+        break;
+    }
+  }
+
   let isWebcamRunning = false;
   let lastCameraFrameTime = performance.now();
   let frameCount = 0;
@@ -118,10 +236,14 @@ window.addEventListener('DOMContentLoaded', async () => {
       btnModeKeyboard.classList.add('active');
       btnModeWebcam.classList.remove('active');
       detector.pause();
+      updateDistanceBadge();
     } else {
       btnModeKeyboard.classList.remove('active');
       btnModeWebcam.classList.add('active');
-      detector.resume();
+      if (!game.state.isPaused) {
+        detector.resume();
+      }
+      updateDistanceBadge();
       if (!isWebcamRunning) {
         startCameraTracking();
       }
@@ -132,27 +254,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   btnModeWebcam.addEventListener('click', () => setMode('webcam'));
   btnEnableCam.addEventListener('click', () => setMode('webcam'));
 
-  // Pause / Resume toggle
-  function togglePause(): void {
-    if (detector.state === DetectorState.PAUSED) {
-      detector.resume();
-      game.state.isPaused = false;
-      btnPause.textContent = 'Pause';
-    } else {
-      detector.pause();
-      game.state.isPaused = true;
-      btnPause.textContent = 'Resume';
-    }
-  }
-
-  btnPause.addEventListener('click', togglePause);
-
   // Recalibrate
   btnRecalibrate.addEventListener('click', () => {
     detector.recalibrate();
   });
 
-  // Global UX Hotkeys: 'p' for pause, 'm' for mute, 'c' for recalibrate, '['/']' for speed
+  // Global UX Hotkeys: P (pause), R (restart), M (mute), C (recalibrate), 1 (keyboard), 2 (webcam), ? (drawer), Esc (close drawer), [/] (speed)
   window.addEventListener('keydown', (e) => {
     if (
       (e.target instanceof HTMLInputElement && e.target !== speedSlider) ||
@@ -162,11 +269,23 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     if (e.key === 'p' || e.key === 'P') {
       togglePause();
+    } else if (e.key === 'r' || e.key === 'R') {
+      game.restart();
+      updatePauseButton();
     } else if (e.key === 'm' || e.key === 'M') {
       game.toggleMute();
       updateMuteButton();
     } else if (e.key === 'c' || e.key === 'C') {
       detector.recalibrate();
+    } else if (e.key === '1') {
+      setMode('keyboard');
+    } else if (e.key === '2') {
+      setMode('webcam');
+    } else if (e.key === '?' || e.key === '/') {
+      e.preventDefault();
+      toggleDrawer();
+    } else if (e.key === 'Escape') {
+      closeDrawer();
     } else if (e.key === '[') {
       e.preventDefault();
       applySpeed(game.speedMultiplier - 0.25, true);
@@ -175,6 +294,10 @@ window.addEventListener('DOMContentLoaded', async () => {
       applySpeed(game.speedMultiplier + 0.25, true);
     }
   });
+
+  // Initial UI updates
+  updatePauseButton();
+  updateDistanceBadge();
 
   // Camera tracking loop
   async function startCameraTracking(): Promise<void> {
@@ -243,6 +366,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     if (frame) {
       const events = detector.processFrame(frame);
+      updateDistanceBadge();
       for (const ev of events) {
         hud.showGestureBanner(ev);
 
