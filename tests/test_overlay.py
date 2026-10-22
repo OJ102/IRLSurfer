@@ -356,4 +356,3 @@ def test_debug_hud_footer_command_bar() -> None:
     tiny_img = np.zeros((24, 40, 3), dtype=np.uint8)
     rendered_tiny = hud.render(tiny_img, None, detector, 30.0, 10.0)
     assert rendered_tiny.shape == (24, 40, 3)
-
