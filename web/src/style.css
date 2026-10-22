@@ -1,61 +1,58 @@
 /* ==========================================================================
-   IRLSurfer - Authentic California Beach Arcade Runner Styling
-   Arcade Cabinet Aesthetics & Tactile 3D Physical Controls Deck
-   Typography: Outfit (Display & Marquee), Plus Jakarta Sans (Interface), JetBrains Mono (Keycaps)
+   IRLSurfer - Authentic Commercial Arcade Runner Styling
+   Inspired by Subway Surfers (SYBO / Poki) & Classic Beachside Arcade Cabinets
    ========================================================================== */
 
 :root {
   /* Typography */
-  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-logo: 'Fredoka', 'Outfit', -apple-system, sans-serif;
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
 
-  /* Arcade Palette: California Sun & Pacific Surf */
-  --bg-deep: #050b14;
-  --bg-arcade: #081220;
-  --bg-panel: #0d1a2d;
-  --bg-panel-elevated: #13243c;
-  --bg-panel-hover: #1a3050;
+  /* California Beach Arcade Palette */
+  --arcade-bg: #070d17;
+  --arcade-bg-surface: #0c1524;
+  --arcade-chassis: #132238;
+  --arcade-chassis-border: #1e3556;
+  --arcade-chassis-rim: #2a4773;
 
-  /* Arcade Vibrant Colors */
-  --arcade-gold: #f59e0b;
-  --arcade-gold-light: #fbbf24;
-  --arcade-gold-dark: #b45309;
-  --arcade-gold-shadow: #78350f;
+  /* Vibrant Game Candy Colors */
+  --btn-gold: #f59e0b;
+  --btn-gold-light: #fef08a;
+  --btn-gold-bevel: #b45309;
+  --btn-gold-shadow: #78350f;
 
-  --arcade-cyan: #0284c7;
-  --arcade-cyan-light: #38bdf8;
-  --arcade-cyan-dark: #0369a1;
-  --arcade-cyan-shadow: #075985;
+  --btn-green: #10b981;
+  --btn-green-light: #a7f3d0;
+  --btn-green-bevel: #059669;
+  --btn-green-shadow: #064e3b;
 
-  --arcade-emerald: #10b981;
-  --arcade-emerald-light: #34d399;
-  --arcade-emerald-dark: #059669;
-  --arcade-emerald-shadow: #047857;
+  --btn-blue: #0284c7;
+  --btn-blue-light: #bae6fd;
+  --btn-blue-bevel: #0369a1;
+  --btn-blue-shadow: #0c4a6e;
 
-  --arcade-coral: #f43f5e;
-  --arcade-coral-light: #fb7185;
-  --arcade-coral-shadow: #be123c;
+  --btn-coral: #f43f5e;
+  --btn-coral-light: #fecdd3;
+  --btn-coral-bevel: #e11d48;
+  --btn-coral-shadow: #9f1239;
 
-  --arcade-slate-btn: #334155;
-  --arcade-slate-border: #475569;
-  --arcade-slate-shadow: #0f172a;
+  --btn-slate: #334155;
+  --btn-slate-light: #cbd5e1;
+  --btn-slate-bevel: #1e293b;
+  --btn-slate-shadow: #0f172a;
 
-  /* Borders & Glows */
-  --border-arcade: #1e3352;
-  --border-arcade-highlight: rgba(56, 189, 248, 0.28);
-  --border-gold: rgba(251, 191, 36, 0.5);
-
-  /* Text Hierarchy */
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
+  /* Text Colors */
+  --text-white: #ffffff;
+  --text-body: #e2e8f0;
   --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-dark: #0f172a;
 
   /* Geometry */
   --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
   --radius-full: 9999px;
 }
 
@@ -66,12 +63,12 @@
 }
 
 body {
-  background-color: var(--bg-deep);
+  background-color: var(--arcade-bg);
   background-image:
-    radial-gradient(circle at 50% 0%, rgba(2, 132, 199, 0.16) 0%, transparent 65%),
-    radial-gradient(circle at 85% 15%, rgba(245, 158, 11, 0.10) 0%, transparent 50%),
-    radial-gradient(circle at 15% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
-  color: var(--text-primary);
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(2, 132, 199, 0.18), transparent 70%),
+    radial-gradient(circle 2px at 20px 20px, rgba(255, 255, 255, 0.04) 1px, transparent 0);
+  background-size: 100% 100%, 32px 32px;
+  color: var(--text-body);
   font-family: var(--font-body);
   font-size: 0.9375rem;
   line-height: 1.5;
@@ -80,39 +77,21 @@ body {
   flex-direction: column;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Custom Arcade Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-deep);
-}
-::-webkit-scrollbar-thumb {
-  background: #1e3352;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-arcade);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #2a4873;
 }
 
 /* ==========================================================================
    Top Header: Arcade Marquee
    ========================================================================== */
 header.arcade-header {
-  padding: 10px 24px;
-  background: linear-gradient(180deg, #0e1b2e 0%, #08111e 100%);
-  border-bottom: 2px solid var(--border-arcade);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  padding: 12px 28px;
+  background: linear-gradient(180deg, #111d2e 0%, #0a1320 100%);
+  border-bottom: 3px solid var(--arcade-chassis-border);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 16px;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -121,19 +100,21 @@ header.arcade-header {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
-.brand-icon {
-  font-size: 2rem;
-  line-height: 1;
-  filter: drop-shadow(0 2px 8px rgba(245, 158, 11, 0.5));
-  transform: rotate(-5deg);
-  transition: transform 0.25s ease;
-}
-
-.brand:hover .brand-icon {
-  transform: rotate(5deg) scale(1.1);
+.brand-badge-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 60%, #d97706 100%);
+  border: 2px solid #fef08a;
+  box-shadow: 0 4px 0 var(--btn-gold-shadow), 0 8px 16px rgba(245, 158, 11, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #78350f;
+  flex-shrink: 0;
 }
 
 .brand-titles {
@@ -141,45 +122,35 @@ header.arcade-header {
   flex-direction: column;
 }
 
-.brand h1 {
-  font-family: var(--font-display);
-  font-size: 1.7rem;
+/* Authentic Subway Surfers 3D Arcade Title Typography */
+.game-logo {
+  font-family: var(--font-logo);
+  font-size: 1.85rem;
   font-weight: 900;
-  letter-spacing: 1.2px;
+  letter-spacing: 1px;
   line-height: 1;
   text-transform: uppercase;
-  background: linear-gradient(180deg, #ffffff 0%, #fde047 35%, #f59e0b 70%, #d97706 100%);
+  color: #fff9db;
+  background: linear-gradient(180deg, #fffbeb 0%, #fde047 30%, #f59e0b 65%, #d97706 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 0 rgba(120, 53, 15, 0.8));
+  -webkit-text-stroke: 1.5px #451a03;
+  filter: drop-shadow(0 3px 0 #78350f) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.7));
   cursor: default;
+  user-select: none;
 }
 
-.subbrand {
-  font-family: var(--font-body);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  color: var(--arcade-cyan-light);
-  opacity: 0.9;
+.game-edition {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #38bdf8;
+  text-transform: uppercase;
   margin-top: 2px;
 }
 
-.badge {
-  font-family: var(--font-display);
-  font-size: 0.65rem;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(180deg, #332005 0%, #1a1002 100%);
-  border: 1.5px solid var(--arcade-gold);
-  color: var(--arcade-gold-light);
-  font-weight: 800;
-  letter-spacing: 1.2px;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(254, 240, 138, 0.3);
-  white-space: nowrap;
-}
-
-/* Header Quick Actions */
+/* Header Action Buttons */
 .header-nav {
   display: flex;
   align-items: center;
@@ -190,77 +161,84 @@ header.arcade-header {
 .arcade-header-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-bottom: 2px solid #000;
-  box-shadow: 0 3px 0 #020617, inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  color: var(--text-secondary);
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 6px 12px;
+  gap: 7px;
+  background: linear-gradient(180deg, #1e2c42 0%, #121c2d 100%);
+  border: 1.5px solid #2d4364;
+  box-shadow: 0 3px 0 #070d17, inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  color: var(--text-body);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 7px 14px;
   border-radius: var(--radius-md);
   text-decoration: none;
   cursor: pointer;
   transition: all 0.12s ease;
+  user-select: none;
 }
 
 .arcade-header-link:hover,
 .arcade-header-btn:hover {
-  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  background: linear-gradient(180deg, #2a3d5a 0%, #172439 100%);
+  border-color: #38bdf8;
   color: #ffffff;
-  border-color: var(--arcade-cyan-light);
 }
 
 .arcade-header-link:active,
 .arcade-header-btn:active {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 #020617;
-}
-
-.header-svg,
-.header-icon {
-  font-size: 0.9rem;
-  flex-shrink: 0;
+  box-shadow: 0 1px 0 #070d17;
 }
 
 /* ==========================================================================
-   Main Arcade Layout: Game Canvas is the Star Centerpiece
+   Main Arcade Cabinet Stage
    ========================================================================== */
-main {
+main.arcade-stage {
   flex: 1;
   display: flex;
-  padding: 20px;
-  gap: 20px;
-  max-width: 1540px;
+  padding: 24px;
+  gap: 24px;
+  max-width: 1560px;
   margin: 0 auto;
   width: 100%;
+  align-items: stretch;
 }
 
-@media (max-width: 1080px) {
-  main {
+@media (max-width: 1120px) {
+  main.arcade-stage {
     flex-direction: column;
-    padding: 14px;
-    gap: 16px;
+    padding: 16px;
+    gap: 18px;
   }
 }
 
-/* Arcade Cabinet Frame */
-.game-container {
+/* Primary Game Cabinet Bezel Frame */
+.game-container.arcade-cabinet {
   flex: 1.65;
   display: flex;
   flex-direction: column;
-  background: #060e1a;
+  background: #03070e;
   border-radius: var(--radius-lg);
-  border: 3px solid #1c2e48;
+  border: 4px solid var(--arcade-chassis-border);
   box-shadow:
-    0 20px 48px -6px rgba(0, 0, 0, 0.8),
-    0 0 0 1px rgba(56, 189, 248, 0.18),
-    0 0 28px -4px rgba(2, 132, 199, 0.2);
+    0 24px 60px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(56, 189, 248, 0.15),
+    inset 0 2px 4px rgba(255, 255, 255, 0.15);
   overflow: hidden;
   position: relative;
   min-height: 580px;
+}
+
+/* Screen Glass Glare */
+.screen-glare {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
 }
 
 #gameCanvas {
@@ -274,18 +252,18 @@ main {
 }
 
 /* ==========================================================================
-   Unified Command Dock: Tactile Arcade Controls Deck
+   Unified Command Dock: Tactile 3D Arcade Control Deck
    ========================================================================== */
 .command-dock {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px 14px;
-  padding: 12px 18px;
-  background: linear-gradient(180deg, #0e1b2f 0%, #07101e 100%);
-  border-top: 2px solid #1e3556;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 -8px 20px rgba(0, 0, 0, 0.4);
+  gap: 12px 16px;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, #132238 0%, #09121f 100%);
+  border-top: 3px solid var(--arcade-chassis-border);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.12), 0 -8px 24px rgba(0, 0, 0, 0.5);
   z-index: 20;
 }
 
@@ -297,112 +275,82 @@ main {
 }
 
 .dock-cluster:not(:last-child) {
-  border-right: 2px solid rgba(30, 53, 86, 0.7);
-  padding-right: 12px;
+  border-right: 2px solid rgba(30, 53, 86, 0.6);
+  padding-right: 14px;
 }
 
-/* ==========================================================================
-   Tactile 3D Arcade Buttons & Keycaps
-   Subway Surfers & Commercial Arcade Game Styling
-   ========================================================================== */
-
-/* Keycap Badges: Authentic Mechanical Arcade Keycaps */
+/* --------------------------------------------------------------------------
+   Authentic 3D Physical Push-Buttons
+   -------------------------------------------------------------------------- */
 .kbd-badge {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 5px;
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  background: #0f172a;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  border-bottom: 2px solid #000;
-  box-shadow: 0 2px 0 #000000, inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 0 #000, inset 0 1px 0 rgba(255, 255, 255, 0.3);
   color: #ffffff;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
   line-height: 1.2;
   letter-spacing: 0.4px;
   display: inline-block;
 }
 
-/* Generic Base Button */
 button.btn {
-  font-family: var(--font-body);
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 800;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   border-radius: var(--radius-md);
-  transition: all 0.1s ease;
   user-select: none;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
-/* Common Dock Push Buttons */
-button.btn-dock {
-  background: linear-gradient(180deg, #1e2e48 0%, #0f1b2c 100%);
-  border: 1.5px solid #2a456c;
-  color: var(--text-primary);
-  padding: 6px 12px;
-  min-height: 40px;
-  border-radius: var(--radius-md);
-  font-size: 0.82rem;
-  box-shadow: 0 4px 0 #070e17, 0 6px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-button.btn-dock:hover {
-  background: linear-gradient(180deg, #2a4166 0%, #14243b 100%);
-  border-color: var(--arcade-cyan-light);
-  color: #ffffff;
-}
-
-button.btn-dock:active {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 #070e17, inset 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* --------------------------------------------------------------------------
-   Cluster 1: Action Controls (Sunny California Gold / Amber 3D Tactile Buttons)
-   -------------------------------------------------------------------------- */
+/* Cluster 1: Action Controls (Subway Surfers Vibrant Gold 3D Buttons) */
 .btn-dock-action,
 #btnPause,
 #btnRestart {
-  background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 55%, #d97706 100%);
-  border: 1.5px solid #fde047;
+  background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  border: 2px solid #fde047;
   color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  padding: 8px 14px;
+  min-height: 42px;
+  font-size: 0.85rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   box-shadow:
-    0 4px 0 var(--arcade-gold-shadow),
-    0 6px 14px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    0 4px 0 var(--btn-gold-shadow),
+    0 8px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .btn-dock-action:hover,
 #btnPause:hover,
 #btnRestart:hover {
-  background: linear-gradient(180deg, #fcd34d 0%, #fbbf24 55%, #f59e0b 100%);
-  filter: brightness(1.06);
+  filter: brightness(1.08);
 }
 
 .btn-dock-action:active,
 #btnPause:active,
 #btnRestart:active {
   transform: translateY(3px);
-  box-shadow: 0 1px 0 var(--arcade-gold-shadow), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 0 var(--btn-gold-shadow), inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Badges inside action buttons have contrast */
 .btn-dock-action .kbd-badge,
 #btnPause .kbd-badge,
 #btnRestart .kbd-badge,
 #btnMute .kbd-badge {
-  background: rgba(69, 26, 3, 0.65);
-  border: 1px solid rgba(254, 240, 138, 0.4);
+  background: rgba(69, 26, 3, 0.7);
+  border: 1px solid rgba(254, 240, 138, 0.5);
   color: #fef08a;
   box-shadow: 0 1px 0 #451a03;
 }
 
 #btnPause {
-  min-width: 100px;
+  min-width: 104px;
   justify-content: center;
 }
 
@@ -414,64 +362,66 @@ button.btn-dock:active {
   box-shadow: 0 0 8px #ffffff;
 }
 
-/* Paused State: Turns into Vibrant Resume Emerald */
+/* Resume Emerald State */
 #btnPause.paused {
-  background: linear-gradient(180deg, #34d399 0%, #10b981 55%, #059669 100%);
+  background: linear-gradient(180deg, #34d399 0%, #10b981 50%, #059669 100%);
   border-color: #6ee7b7;
   box-shadow:
-    0 4px 0 var(--arcade-emerald-shadow),
-    0 6px 14px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
-}
-
-#btnPause.paused:active {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 var(--arcade-emerald-shadow);
+    0 4px 0 var(--btn-green-shadow),
+    0 8px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 #btnPause.paused .kbd-badge {
-  background: rgba(6, 78, 59, 0.7);
+  background: rgba(6, 78, 59, 0.8);
   border-color: rgba(167, 243, 208, 0.5);
   color: #a7f3d0;
   box-shadow: 0 1px 0 #064e3b;
 }
 
+.btn-restart {
+  background: linear-gradient(180deg, #fb923c 0%, #f97316 50%, #ea580c 100%) !important;
+  border-color: #fdba74 !important;
+  box-shadow: 0 4px 0 #9a3412, 0 8px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+}
+
 .btn-mute {
-  padding: 6px 10px;
+  padding: 8px 12px;
 }
 
 /* --------------------------------------------------------------------------
-   Cluster 2: Input Mode Switcher (Pacific Ocean Blue Arcade Toggle Deck)
+   Cluster 2: Mode Toggle (Physical 2-Way Arcade Switch)
    -------------------------------------------------------------------------- */
 .dock-cluster-mode.mode-toggle {
   display: inline-flex;
-  background: #050d18;
-  border: 2px solid #1a2c46;
+  background: #060d17;
+  border: 2px solid var(--arcade-chassis-border);
   border-radius: var(--radius-full);
   padding: 4px;
-  gap: 3px;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+  gap: 4px;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.6);
 }
 
 .dock-cluster-mode button {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  padding: 6px 13px;
+  padding: 6px 14px;
   min-height: 34px;
   border-radius: var(--radius-full);
   cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  transition: all 0.12s ease;
+  gap: 6px;
+  transition: all 0.1s ease;
+  user-select: none;
 }
 
 .dock-cluster-mode button:hover {
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
 .dock-cluster-mode button.active {
@@ -479,36 +429,35 @@ button.btn-dock:active {
   color: #ffffff;
   border: 1px solid #7dd3fc;
   box-shadow:
-    0 3px 0 var(--arcade-cyan-shadow),
+    0 3px 0 var(--btn-blue-shadow),
     0 4px 10px rgba(2, 132, 199, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .dock-cluster-mode button.active:active {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 var(--arcade-cyan-shadow);
+  box-shadow: 0 1px 0 var(--btn-blue-shadow);
 }
 
 .dock-cluster-mode button.active .kbd-badge {
-  background: rgba(8, 47, 73, 0.85);
-  border-color: rgba(186, 230, 253, 0.4);
+  background: rgba(12, 74, 110, 0.9);
+  border-color: rgba(186, 230, 253, 0.5);
   color: #ffffff;
-  box-shadow: 0 1px 0 #082f49;
 }
 
 /* --------------------------------------------------------------------------
-   Cluster 3: Cruise Speed Controller (Arcade Cockpit Steppers & Display)
+   Cluster 3: Cruise Speed Controller (Arcade Throttle & Steppers)
    -------------------------------------------------------------------------- */
 .dock-cluster-speed.speed-controller {
   display: flex;
   align-items: center;
-  gap: 7px;
-  background: #060e1a;
-  border: 2px solid var(--border-arcade);
-  padding: 4px 10px;
+  gap: 8px;
+  background: #060d17;
+  border: 2px solid var(--arcade-chassis-border);
+  padding: 4px 12px;
   border-radius: var(--radius-full);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.6);
 }
 
 .btn-stepper {
@@ -521,11 +470,11 @@ button.btn-dock:active {
   justify-content: center;
   border-radius: var(--radius-full);
   background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
-  border: 1.5px solid var(--arcade-slate-border);
+  border: 1.5px solid #475569;
   color: #ffffff;
-  box-shadow: 0 3px 0 var(--arcade-slate-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  font-size: 1.05rem;
-  font-weight: 800;
+  box-shadow: 0 3px 0 var(--btn-slate-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  font-size: 1.15rem;
+  font-weight: 900;
 }
 
 .btn-stepper:hover {
@@ -534,34 +483,34 @@ button.btn-dock:active {
 
 .btn-stepper:active {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 var(--arcade-slate-shadow);
+  box-shadow: 0 1px 0 var(--btn-slate-shadow);
 }
 
 .btn-stepper .kbd-badge {
-  display: none; /* Keep in DOM for tests, visually clean stepper */
+  display: none;
 }
 
 /* Digital Arcade Speed Readout Badge */
 .speed-badge {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 0.95rem;
-  color: var(--arcade-gold-light);
+  font-size: 0.98rem;
+  color: #fde047;
   background: #020617;
-  border: 2px solid var(--arcade-gold);
-  padding: 2px 8px;
-  border-radius: 8px;
-  min-width: 48px;
+  border: 2px solid #f59e0b;
+  padding: 2px 9px;
+  border-radius: var(--radius-sm);
+  min-width: 52px;
   text-align: center;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.35), inset 0 2px 4px rgba(0, 0, 0, 0.85);
   letter-spacing: 0.5px;
-  text-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.7);
 }
 
 .speed-slider {
   -webkit-appearance: none;
   appearance: none;
-  width: 70px;
+  width: 65px;
   height: 6px;
   border-radius: var(--radius-full);
   background: #172a44;
@@ -573,18 +522,13 @@ button.btn-dock:active {
 .speed-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: linear-gradient(180deg, #fde047 0%, #f59e0b 100%);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.8), 0 2px 3px rgba(0,0,0,0.5);
-  border: 1px solid #ffffff;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.8), 0 2px 4px rgba(0,0,0,0.6);
+  border: 1.5px solid #ffffff;
   cursor: pointer;
-  transition: transform 0.12s ease;
-}
-
-.speed-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.25);
 }
 
 .speed-presets {
@@ -596,33 +540,33 @@ button.btn-dock:active {
   background: #1e293b;
   border: 1px solid #334155;
   color: var(--text-muted);
-  font-family: var(--font-body);
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 3px 8px;
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 4px 8px;
   border-radius: var(--radius-full);
   cursor: pointer;
   box-shadow: 0 2px 0 #0f172a;
-  transition: all 0.12s ease;
+  transition: all 0.1s ease;
   white-space: nowrap;
 }
 
 .speed-preset-btn:hover {
-  color: var(--text-primary);
-  border-color: var(--arcade-cyan-light);
+  color: #ffffff;
+  border-color: #38bdf8;
 }
 
 .speed-preset-btn.active {
   background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
   border-color: #fde047;
   color: #ffffff;
-  font-weight: 800;
-  box-shadow: 0 2px 0 var(--arcade-gold-shadow);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+  font-weight: 900;
+  box-shadow: 0 2px 0 var(--btn-gold-shadow);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
 }
 
 /* --------------------------------------------------------------------------
-   Cluster 4: Vision Status & Recalibrate
+   Cluster 4: Vision Guidance LED Beacon & Recalibrate
    -------------------------------------------------------------------------- */
 .dock-cluster-vision {
   display: flex;
@@ -634,10 +578,11 @@ button.btn-dock:active {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
+  padding: 5px 12px;
   min-height: 38px;
   border-radius: var(--radius-full);
-  font-size: 0.78rem;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.4px;
   border: 2px solid transparent;
@@ -646,26 +591,26 @@ button.btn-dock:active {
 }
 
 .vision-distance-badge.status-optimal {
-  background: rgba(16, 185, 129, 0.18);
-  border-color: var(--arcade-emerald);
-  color: var(--arcade-emerald-light);
-  box-shadow: 0 0 14px rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.2);
+  border-color: var(--btn-green);
+  color: #34d399;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
 }
 
 .vision-distance-badge.status-close {
-  background: rgba(244, 63, 94, 0.2);
-  border-color: var(--arcade-coral);
-  color: var(--arcade-coral-light);
-  box-shadow: 0 0 14px rgba(244, 63, 94, 0.4);
-  animation: pulseAlert 1.2s infinite;
+  background: rgba(244, 63, 94, 0.22);
+  border-color: var(--btn-coral);
+  color: #fb7185;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.45);
+  animation: pulseBeacon 1s infinite alternate;
 }
 
 .vision-distance-badge.status-far {
-  background: rgba(245, 158, 11, 0.2);
-  border-color: var(--arcade-gold);
-  color: var(--arcade-gold-light);
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
-  animation: pulseAlert 1.2s infinite;
+  background: rgba(245, 158, 11, 0.22);
+  border-color: var(--btn-gold);
+  color: #fbbf24;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.45);
+  animation: pulseBeacon 1s infinite alternate;
 }
 
 .vision-distance-badge.status-unknown {
@@ -675,33 +620,38 @@ button.btn-dock:active {
 }
 
 .vision-distance-badge.status-standby {
-  background: rgba(2, 132, 199, 0.12);
-  border-color: rgba(56, 189, 248, 0.35);
-  color: var(--arcade-cyan-light);
+  background: rgba(2, 132, 199, 0.14);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
 }
 
-@keyframes pulseAlert {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.75; transform: scale(0.97); }
+@keyframes pulseBeacon {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0.8; transform: scale(0.97); }
 }
 
 .btn-recalibrate {
   background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
   border: 1.5px solid #334155;
-  box-shadow: 0 4px 0 #020617, inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: var(--text-body);
+  padding: 8px 12px;
+  min-height: 40px;
+  font-size: 0.82rem;
+  box-shadow: 0 3px 0 #020617, inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .btn-recalibrate:hover {
   background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  color: #ffffff;
 }
 
 .btn-recalibrate:active {
-  transform: translateY(3px);
+  transform: translateY(2px);
   box-shadow: 0 1px 0 #020617;
 }
 
 /* --------------------------------------------------------------------------
-   Cluster 5: Drawer Toggle
+   Cluster 5: Drawer Toggle Button
    -------------------------------------------------------------------------- */
 .dock-cluster-drawer {
   display: flex;
@@ -711,62 +661,66 @@ button.btn-dock:active {
 .btn-drawer-toggle {
   background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
   border: 1.5px solid #475569;
-  box-shadow: 0 4px 0 #0f172a, inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 8px 14px;
+  min-height: 40px;
+  font-size: 0.82rem;
+  box-shadow: 0 3px 0 var(--btn-slate-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .btn-drawer-toggle:hover {
   background: linear-gradient(180deg, #475569 0%, #334155 100%);
-  border-color: var(--arcade-gold-light);
+  border-color: #fde047;
 }
 
 .btn-drawer-toggle:active {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 #0f172a;
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--btn-slate-shadow);
 }
 
 /* ==========================================================================
-   Sidebar: Streamer PIP & Arcade Quick Controls
+   Arcade Side Station: Motion Sensor & Official Instruction Decal
    ========================================================================== */
-.sidebar {
+.sidebar.arcade-station {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   min-width: 360px;
   max-width: 440px;
 }
 
-@media (max-width: 1080px) {
-  .sidebar {
+@media (max-width: 1120px) {
+  .sidebar.arcade-station {
     max-width: 100%;
     min-width: 100%;
   }
 }
 
-/* Streamer PIP / Motion Tracker Dock */
+/* Motion Sensor Monitor */
 .camera-card.streamer-pip {
-  background: #060e1a;
+  background: #040810;
   border-radius: var(--radius-lg);
-  border: 3px solid #1c2e48;
+  border: 4px solid var(--arcade-chassis-border);
   overflow: hidden;
   box-shadow:
-    0 16px 36px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(56, 189, 248, 0.16);
+    0 16px 40px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(56, 189, 248, 0.15);
   position: relative;
 }
 
 .camera-header {
-  padding: 8px 16px;
+  padding: 9px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(180deg, #112239 0%, #0b1728 100%);
-  border-bottom: 2px solid #1c2e48;
+  background: linear-gradient(180deg, #132238 0%, #0a1320 100%);
+  border-bottom: 2px solid var(--arcade-chassis-border);
   font-family: var(--font-display);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 800;
-  letter-spacing: 0.8px;
-  color: var(--arcade-cyan-light);
+  letter-spacing: 1px;
+  color: #38bdf8;
 }
 
 .camera-title-wrap {
@@ -779,14 +733,9 @@ button.btn-dock:active {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--arcade-emerald);
-  box-shadow: 0 0 10px var(--arcade-emerald);
-  animation: pulseDot 1.8s infinite ease-in-out;
-}
-
-@keyframes pulseDot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.35; transform: scale(0.85); }
+  background: var(--btn-green);
+  box-shadow: 0 0 10px var(--btn-green);
+  animation: pulseBeacon 1.4s infinite alternate;
 }
 
 #cameraFps {
@@ -800,7 +749,7 @@ button.btn-dock:active {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: #030810;
+  background: #02050b;
   overflow: hidden;
 }
 
@@ -828,7 +777,7 @@ button.btn-dock:active {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: radial-gradient(circle at 50% 50%, rgba(10, 24, 44, 0.96) 0%, rgba(4, 9, 18, 0.98) 100%);
+  background: radial-gradient(circle at 50% 50%, rgba(12, 23, 39, 0.96) 0%, rgba(3, 7, 14, 0.98) 100%);
   padding: 24px;
   text-align: center;
   z-index: 10;
@@ -838,28 +787,22 @@ button.btn-dock:active {
   display: none;
 }
 
-.prompt-icon {
-  font-size: 2.4rem;
-  filter: drop-shadow(0 2px 10px rgba(245, 158, 11, 0.5));
-}
-
-.prompt-title {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
+.prompt-badge {
+  font-family: var(--font-logo);
+  font-size: 1.35rem;
   font-weight: 900;
   letter-spacing: 0.8px;
   color: #ffffff;
-  line-height: 1.2;
   text-transform: uppercase;
 }
 
 .prompt-subtitle {
   font-size: 0.82rem;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   max-width: 260px;
 }
 
-/* Authentic Arcade Action Button (Subway Surfers Play Button) */
+/* Chunky Emerald Green "Enable Webcam" Button (Poki Play Style) */
 .btn-arcade-action,
 .btn-enable-webcam {
   background: linear-gradient(180deg, #34d399 0%, #10b981 50%, #059669 100%);
@@ -867,45 +810,47 @@ button.btn-dock:active {
   color: #ffffff;
   padding: 10px 22px;
   border-radius: var(--radius-md);
+  font-family: var(--font-display);
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 0.6px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   box-shadow:
-    0 5px 0 var(--arcade-emerald-shadow),
+    0 5px 0 var(--btn-green-shadow),
     0 8px 18px rgba(16, 185, 129, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.12s ease;
+  user-select: none;
 }
 
 .btn-arcade-action:hover,
 .btn-enable-webcam:hover {
-  background: linear-gradient(180deg, #6ee7b7 0%, #34d399 50%, #10b981 100%);
-  filter: brightness(1.06);
+  filter: brightness(1.08);
 }
 
 .btn-arcade-action:active,
 .btn-enable-webcam:active {
   transform: translateY(4px);
-  box-shadow: 0 1px 0 var(--arcade-emerald-shadow);
+  box-shadow: 0 1px 0 var(--btn-green-shadow);
 }
 
 .prompt-subtext {
-  font-size: 0.74rem;
-  color: var(--text-dim);
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
 
-/* Quick Controls Guide Card */
-.guide-card {
-  background: #081322;
+/* --------------------------------------------------------------------------
+   Arcade Cabinet Instruction Decal (Real Arcade Machine Side Decal)
+   -------------------------------------------------------------------------- */
+.guide-card.arcade-decal {
+  background: linear-gradient(180deg, #0d1a2d 0%, #08111e 100%);
   border-radius: var(--radius-lg);
-  border: 2px solid #1c2e48;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
-  padding: 16px;
+  border: 3px solid var(--arcade-chassis-border);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+  padding: 16px 18px;
 }
 
 .guide-card-header {
@@ -918,82 +863,93 @@ button.btn-dock:active {
 .guide-card-header h3 {
   font-family: var(--font-display);
   font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  color: var(--arcade-gold-light);
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: #fde047;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 0;
+  text-transform: uppercase;
 }
 
 .btn-sidebar-drawer {
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  border: 1px solid #334155;
-  color: var(--arcade-cyan-light);
-  font-family: var(--font-body);
-  font-size: 0.72rem;
-  font-weight: 700;
+  background: linear-gradient(180deg, #1e2c42 0%, #121c2d 100%);
+  border: 1.5px solid #2d4364;
+  color: #38bdf8;
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  font-weight: 800;
   padding: 4px 10px;
   border-radius: var(--radius-full);
-  box-shadow: 0 2px 0 #020617;
+  box-shadow: 0 2px 0 #070d17;
   cursor: pointer;
-  transition: all 0.12s ease;
 }
 
 .btn-sidebar-drawer:hover {
-  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  background: linear-gradient(180deg, #2a3d5a 0%, #172439 100%);
   color: #ffffff;
-  border-color: var(--arcade-cyan-light);
 }
 
-.btn-sidebar-drawer:active {
-  transform: translateY(1.5px);
-  box-shadow: 0 0.5px 0 #020617;
-}
-
-.gesture-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.decal-grid {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.gesture-item {
-  background: #0b1a2e;
+.decal-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #060d17;
+  border: 1.5px solid #1a2a40;
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.decal-glyph-badge {
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  border: 1.5px solid #162842;
-  transition: border-color 0.15s ease;
+  background: linear-gradient(180deg, #1e2c42 0%, #0d1726 100%);
+  border: 1.5px solid #2d4364;
+  color: #fde047;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 0 #000;
 }
 
-.gesture-item:hover {
-  border-color: var(--arcade-cyan-light);
+.decal-info {
+  display: flex;
+  flex-direction: column;
 }
 
-.gesture-item .action {
+.decal-info .action {
   font-family: var(--font-display);
   font-weight: 800;
-  color: var(--arcade-gold-light);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
+  color: #ffffff;
 }
 
-.gesture-item .desc {
-  font-size: 0.73rem;
+.decal-info .desc {
+  font-size: 0.75rem;
   color: var(--text-muted);
-  margin-top: 2px;
-  line-height: 1.3;
 }
 
 /* ==========================================================================
-   Slide-out Controls & Hotkeys Drawer: Arcade Pause Menu Style
+   Slide-out Controls & Hotkeys Drawer
    ========================================================================== */
 .drawer-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(2, 6, 12, 0.75);
+  background: rgba(3, 7, 14, 0.75);
   backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 998;
+  z-index: 1000;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
@@ -1009,17 +965,16 @@ button.btn-dock:active {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 450px;
-  max-width: 92vw;
-  background: #091322;
-  border-left: 3px solid #1e3352;
-  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.85);
-  z-index: 999;
+  width: 480px;
+  max-width: 90vw;
+  background: #0a1322;
+  border-left: 3px solid var(--arcade-chassis-border);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.8);
+  z-index: 1001;
   transform: translateX(100%);
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .controls-drawer.open {
@@ -1027,12 +982,12 @@ button.btn-dock:active {
 }
 
 .drawer-header {
-  padding: 16px 20px;
+  padding: 16px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(180deg, #112239 0%, #0c1828 100%);
-  border-bottom: 2px solid #1e3352;
+  background: #0f1c30;
+  border-bottom: 2px solid var(--arcade-chassis-border);
 }
 
 .drawer-title-group {
@@ -1041,114 +996,110 @@ button.btn-dock:active {
   gap: 10px;
 }
 
-.drawer-icon {
-  font-size: 1.4rem;
-}
-
-.drawer-header h2 {
+.drawer-title-group h2 {
   font-family: var(--font-display);
   font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--arcade-cyan-light);
+  font-weight: 900;
+  color: #ffffff;
 }
 
 .btn-drawer-close {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
   background: #1e293b;
   border: 1px solid #334155;
-  color: var(--text-muted);
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  font-size: 1.1rem;
+  color: #ffffff;
   font-weight: 800;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 0 #020617;
-  transition: all 0.12s ease;
 }
 
 .btn-drawer-close:hover {
-  color: #ffffff;
   background: #334155;
-  border-color: var(--arcade-coral);
-}
-
-.btn-drawer-close:active {
-  transform: translateY(1.5px);
-  box-shadow: 0 0.5px 0 #020617;
+  color: var(--btn-coral);
 }
 
 .drawer-body {
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 24px;
 }
 
 .drawer-section h3 {
   font-family: var(--font-display);
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  color: var(--arcade-gold-light);
-  margin-bottom: 10px;
+  color: #fde047;
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 12px;
 }
 
 .drawer-gesture-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .drawer-gesture-item {
-  background: #0d1b2d;
-  border: 1.5px solid #192e4a;
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
+  display: flex;
+  gap: 12px;
+  background: #070e1a;
+  border: 1.5px solid #1a2a40;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
 }
 
-.drawer-gesture-item .gesture-title {
+.gesture-icon-chip {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: #1e2c42;
+  border: 1px solid #2d4364;
+  color: #fde047;
+  font-family: var(--font-display);
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gesture-title {
   display: block;
   font-family: var(--font-display);
   font-weight: 800;
-  color: var(--arcade-gold);
-  font-size: 0.8rem;
+  color: #ffffff;
+  font-size: 0.88rem;
 }
 
-.drawer-gesture-item .gesture-desc {
+.gesture-desc {
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
-  margin-top: 2px;
-  line-height: 1.3;
 }
 
+/* Hotkeys List */
 .hotkeys-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: #060e1a;
-  border: 1.5px solid #172a44;
-  border-radius: var(--radius-md);
-  padding: 6px;
+  gap: 6px;
 }
 
 .hotkey-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 8px;
+  background: #070e1a;
+  border: 1px solid #16243a;
   border-radius: var(--radius-sm);
-  font-size: 0.78rem;
-}
-
-.hotkey-row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  padding: 7px 12px;
 }
 
 .hotkey-keys {
@@ -1158,69 +1109,33 @@ button.btn-dock:active {
 }
 
 .hotkey-action {
-  color: var(--text-secondary);
-  text-align: right;
-  font-size: 0.76rem;
+  font-size: 0.8rem;
+  color: var(--text-body);
 }
 
 .stance-tips-list {
-  padding-left: 18px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  line-height: 1.5;
+  list-style: none;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.stance-tips-list li {
+  background: #070e1a;
+  border: 1px solid #16243a;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
 }
 
 .stance-tips-list strong {
-  color: var(--arcade-cyan-light);
+  color: #ffffff;
 }
 
 .text-emerald {
-  color: var(--arcade-emerald-light);
+  color: #34d399;
   font-weight: 800;
-}
-
-/* Privacy & Technology Section inside Drawer */
-.drawer-privacy-box {
-  background: #060e1a;
-  border: 1.5px solid #16304d;
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.privacy-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--arcade-emerald-light);
-  font-size: 0.78rem;
-}
-
-.privacy-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--arcade-emerald);
-  box-shadow: 0 0 8px var(--arcade-emerald);
-}
-
-.privacy-desc {
-  font-size: 0.76rem;
-  color: var(--text-secondary);
-  line-height: 1.45;
-}
-
-.privacy-subdesc {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 6px;
 }
 
 /* ==========================================================================
@@ -1228,54 +1143,29 @@ button.btn-dock:active {
    ========================================================================== */
 footer.arcade-footer {
   padding: 14px 24px;
+  background: #060b13;
+  border-top: 2px solid var(--arcade-chassis-border);
   text-align: center;
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  border-top: 2px solid var(--border-arcade);
-  background: #060e1a;
   margin-top: auto;
+}
+
+.footer-content {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.footer-divider {
-  opacity: 0.4;
-}
-
-footer a {
-  color: var(--arcade-cyan-light);
-  text-decoration: none;
+  gap: 12px;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
   font-weight: 700;
-  transition: color 0.15s;
+  color: var(--text-muted);
 }
 
-footer a:hover {
-  color: var(--arcade-gold-light);
+.footer-github-link {
+  color: #38bdf8;
+  text-decoration: none;
 }
 
-/* ==========================================================================
-   Responsive Adaptations
-   ========================================================================== */
-@media (max-width: 900px) {
-  .speed-slider {
-    display: none;
-  }
-}
-
-@media (max-width: 768px) {
-  .command-dock {
-    padding: 8px 12px;
-    gap: 8px;
-    justify-content: center;
-  }
-  .dock-cluster:not(:last-child) {
-    border-right: none;
-    padding-right: 0;
-  }
-  .speed-presets {
-    display: none;
-  }
+.footer-github-link:hover {
+  text-decoration: underline;
+  color: #ffffff;
 }
