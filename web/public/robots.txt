@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://oj102.github.io/IRLSurfer/sitemap.xml

@@ -1,18 +1,18 @@
-# IRLSurfer
+# IRLSurfer: Play Subway Surfers With Your Body Using a Webcam
 
-**Real-Time Computer Vision Gesture Controller for High-Speed Reflex Gaming**
+**Webcam body-tracking game controller: MediaPipe pose estimation turns side-steps, jumps and ducks into keyboard input in real time.**
 
 [![CI](https://github.com/OJ102/IRLSurfer/actions/workflows/ci.yml/badge.svg)](https://github.com/OJ102/IRLSurfer/actions/workflows/ci.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
 [![TypeScript](https://img.shields.io/badge/typescript-5.5-3178c6.svg)](https://www.typescriptlang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Core Coverage: 100%](https://img.shields.io/badge/coverage-100%25%20core-brightgreen.svg)](tests/)
 
-[**Live Web Demo (Zero-Install)**](https://oj102.github.io/IRLSurfer/) | [**Architecture**](#system-architecture) | [**CV/ML Engineering**](#cvml-engineering-decisions) | [**Benchmarks**](#empirical-benchmarks) | [**Quickstart**](#quickstart--installation)
+[**Live Web Demo (Zero-Install)**](https://oj102.github.io/IRLSurfer/) | [**Features**](#features) | [**How It Works**](#how-it-works) | [**Benchmarks**](#empirical-benchmarks) | [**Quickstart**](#quickstart--installation) | [**Contributing**](#contributing)
 
 ---
 
-## Recruiter & Engineering Executive Summary
+## Overview
 
 **IRLSurfer** is an edge computer vision controller that translates whole-body kinematics from an ordinary webcam into low-latency keyboard inputs to control Subway Surfers in real time.
 
@@ -26,6 +26,36 @@ Most computer vision input projects suffer from spatial sensitivity (breaking wh
 
 ---
 
+## Features
+
+* **Full-body gesture control**: side-step left or right to switch lanes, jump to jump, duck to roll, and touch your wrists together (held for 0.3 s) to fire the hoverboard.
+* **Works with any webcam**: no depth camera, Kinect, or wearable needed. Pose detection uses Google MediaPipe Pose Landmarker (lite, full, or heavy models).
+* **Real Subway Surfers control**: the Python desktop controller sends Left / Right / Up / Down / Space key presses via `pynput`, so it drives Subway Surfers in a browser, emulator, or native app.
+* **Zero-install browser game**: a TypeScript + Vite web build runs MediaPipe in the browser (WebAssembly) with a built-in 3-lane arcade runner. [Play it here](https://oj102.github.io/IRLSurfer/).
+* **Distance-invariant tracking**: movements are measured in shoulder widths, so thresholds hold whether you stand close to or far from the camera.
+* **Jitter-free, low false-trigger input**: One Euro adaptive filtering plus a Schmitt-trigger state machine with velocity gating and auto-recentering.
+* **Debug HUD overlay**: OpenCV window shows the skeleton, displacement vectors, detector state, and latency.
+* **Record, label, evaluate, benchmark**: `irlsurfer record`, `label`, `eval`, and `bench` subcommands for building and scoring gesture datasets.
+
+## Demo
+
+* **Live browser demo**: [oj102.github.io/IRLSurfer](https://oj102.github.io/IRLSurfer/) (allow camera access, or play with the keyboard).
+* **Desktop controller**: run `irlsurfer play`, open Subway Surfers in another window, and step back until your shoulders and hips are in frame. The HUD shows `STEP BACK - TOO CLOSE` / `STEP CLOSER - TOO FAR` / `DISTANCE OK` guidance.
+
+## Tech Stack
+
+| Layer | Technology |
+| :--- | :--- |
+| Pose estimation | [MediaPipe](https://developers.google.com/mediapipe) Pose Landmarker (Python `mediapipe`, web `@mediapipe/tasks-vision`) |
+| Video capture and HUD | OpenCV (`opencv-python`) / browser `MediaStream` + Canvas |
+| Signal processing | One Euro Filter, NumPy |
+| Gesture detection | Deterministic Schmitt-trigger finite state machine (shared `config/gestures.json`) |
+| Keyboard output | `pynput` (macOS Accessibility / CoreGraphics) |
+| Web runtime | TypeScript 5, Vite, Vitest |
+| Quality | pytest + coverage, mypy (strict), Ruff, GitHub Actions CI, GitHub Pages deploy |
+
+---
+
 ## Live Demo vs. Desktop Controller
 
 | Runtime | Environment | Input Mechanism | Primary Use Case |
@@ -35,7 +65,11 @@ Most computer vision input projects suffer from spatial sensitivity (breaking wh
 
 ---
 
-## System Architecture
+## How It Works
+
+Each webcam frame goes through six stages: capture, MediaPipe pose estimation, body-space normalization, One Euro filtering, the gesture state machine, and keyboard dispatch. A 2-second calibration at startup records your neutral standing position. Full design notes live in [`docs/architecture.md`](docs/architecture.md).
+
+### System Architecture
 
 The pipeline strictly decouples asynchronous frame capture, pose estimation, coordinate transformation, temporal filtering, state machine detection, and OS input dispatch:
 
@@ -370,6 +404,19 @@ IRLSurfer/
 ├── pyproject.toml             # Python packaging and tool configuration
 └── README.md
 ```
+
+---
+
+## Contributing
+
+Contributions, bug reports, and gesture-tuning ideas are welcome.
+
+1. Fork the repo and create a feature branch.
+2. Install dev dependencies: `pip install -e ".[dev]"` and `npm --prefix web install`.
+3. Keep `config/gestures.json` as the single source of truth for thresholds, and update both the Python and TypeScript detectors if you change detection logic.
+4. Run the checks in [Verification & Testing Suite](#verification--testing-suite) (`ruff`, `mypy`, `pytest`, `npm test`) before opening a pull request.
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ---
 
