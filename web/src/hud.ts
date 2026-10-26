@@ -79,7 +79,7 @@ export class CameraHUD {
     }
 
     // Semi-transparent deep coastal tint for high contrast and calm visual tone
-    ctx.fillStyle = 'rgba(6, 14, 26, 0.48)';
+    ctx.fillStyle = 'rgba(6, 14, 26, 0.15)';
     ctx.fillRect(0, 0, w, h);
 
     // Coastal corner reticle brackets with precision ticks
@@ -175,15 +175,21 @@ export class CameraHUD {
     ctx.lineTo(w - inset, h - inset - bracketLen);
     ctx.stroke();
 
-    // Subtle corner accent dots
+    // Subtle corner accent dots (each dot is its own path so the
+    // arcs are never joined into one filled polygon over the feed)
     ctx.fillStyle = '#14b8a6';
     const dotDist = inset + 4;
-    ctx.beginPath();
-    ctx.arc(dotDist, dotDist, 2, 0, Math.PI * 2);
-    ctx.arc(w - dotDist, dotDist, 2, 0, Math.PI * 2);
-    ctx.arc(dotDist, h - dotDist, 2, 0, Math.PI * 2);
-    ctx.arc(w - dotDist, h - dotDist, 2, 0, Math.PI * 2);
-    ctx.fill();
+    const dotCenters: [number, number][] = [
+      [dotDist, dotDist],
+      [w - dotDist, dotDist],
+      [dotDist, h - dotDist],
+      [w - dotDist, h - dotDist],
+    ];
+    for (const [cx, cy] of dotCenters) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     ctx.restore();
   }
@@ -335,7 +341,7 @@ export class CameraHUD {
     const pillH = 42;
 
     // Background card
-    ctx.fillStyle = 'rgba(8, 19, 37, 0.88)';
+    ctx.fillStyle = 'rgba(8, 19, 37, 0.72)';
     this.drawRoundedRect(ctx, pillX, pillY, pillW, pillH, 10);
     ctx.fill();
 
